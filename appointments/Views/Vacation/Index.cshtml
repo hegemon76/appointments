@@ -1,0 +1,16 @@
+﻿@using appointments.Helper;
+
+<div class="row">
+    <div class="container">
+        @if (User.IsInRole(Helper.Admin))
+        {
+            <div class="form-group row col-2" id="divAppWorkerList">
+                <label>Wybierz pracownika</label>
+                @Html.DropDownList("appWorkerId", new SelectList(ViewBag.WorkerList, "Id", "Name"), new { @class = "form-control select2" })
+            </div>
+        }
+        <div id="calendar"></div>
+    </div>
+</div>
+
+<partial name="_AddEditApointment" />

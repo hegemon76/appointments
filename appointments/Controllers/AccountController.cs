@@ -37,7 +37,7 @@ namespace appointments.Controllers
                 var result = await _signInManager.PasswordSignInAsync(model.Email,model.Password, model.RememberMe, false);
                 if (result.Succeeded)
                 {
-                    return RedirectToAction("Index", "Home");
+                    return RedirectToAction("Index", "Appointment");
                 }
                 ModelState.AddModelError("", "Próba logowania nieudana");
             }
@@ -49,8 +49,7 @@ namespace appointments.Controllers
             if (!_roleManager.RoleExistsAsync(Helper.Helper.Admin).GetAwaiter().GetResult())
             {
                 await _roleManager.CreateAsync(new IdentityRole(Helper.Helper.Admin));
-                await _roleManager.CreateAsync(new IdentityRole(Helper.Helper.AppointmentClient));
-                await _roleManager.CreateAsync(new IdentityRole(Helper.Helper.AppointmentOwner));
+                await _roleManager.CreateAsync(new IdentityRole(Helper.Helper.AppWorker));
             }
             return View();
         }

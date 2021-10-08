@@ -10,5 +10,7 @@ namespace appointments.Data
             : base(options)
         {
         }
+
+        public DbSet<Vacation> Vacations {get;set;}
     }
 }

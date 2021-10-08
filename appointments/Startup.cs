@@ -1,5 +1,6 @@
 using appointments.Data;
 using appointments.Models;
+using appointments.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -34,9 +35,14 @@ namespace appointments
 
             services.AddDatabaseDeveloperPageExceptionFilter();
 
+            services.AddTransient<IVacationService, VacationService>();
+
             services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
 
+            services.AddHttpContextAccessor();
+
             services.AddControllersWithViews();
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

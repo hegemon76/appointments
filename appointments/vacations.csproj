@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-    <UserSecretsId>aspnet-appointments-B5B19394-F241-4271-BA69-EA8B0A253245</UserSecretsId>
+    <UserSecretsId>aspnet-vacations-B5B19394-F241-4271-BA69-EA8B0A253245</UserSecretsId>
     <CopyRefAssembliesToPublishDirectory>false</CopyRefAssembliesToPublishDirectory>
   </PropertyGroup>
 
