@@ -9,6 +9,6 @@ namespace appointments.Services
     {
         public List<AppWorkerViewModel> GetWorkerList();
         public Task<int> AddUpdate(VacationViewModel model);
-        public List<Vacation> VacationsEventById(string workerId);
+        public List<VacationViewModel> VacationsEventById(string workerId);
     }
 }

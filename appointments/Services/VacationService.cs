@@ -63,9 +63,17 @@ namespace appointments.Services
             return workers;
         }
 
-        public List<Vacation> VacationsEventById(string workerId)
+        public List<VacationViewModel> VacationsEventById(string workerId)
         {
-           return _db.Vacations.Where(x => x.AppWorkerId == workerId).ToList().Select(c =>)
+           return _db.Vacations.Where(x => x.AppWorkerId == workerId).ToList().Select(c => new VacationViewModel(){ 
+            Id = c.Id,
+            Description = c.Description,
+            StartDate = c.StartDate.ToString("yyyy-MM,dd"),
+            EndDate = c.EndDate.ToString("yyyy-MM,dd"),
+            Title = c.Title,
+            Duration = c.Duration,
+            IsApproved = c.IsApproved
+           }).ToList();
         }
     }
 }

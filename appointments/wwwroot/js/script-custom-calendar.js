@@ -26,6 +26,27 @@ document.addEventListener('DOMContentLoaded', function () {
                 select: function (event) {
                     onShowModal(event, null);
                 },
+                event: function (fetchInfo, successCallback, failureCallback) {
+                    $.ajax({
+                        url: routeURL + '/api/Vacation/GetCalendarData?workerId=' + $("#appWorkerId").val(),
+                        type: 'GET',
+                        dataType: 'JSON',
+                        success: function (response) {
+                            var events[];
+                            if (response.status === 1) {
+                                $.each(response.dataenum, function (i, data) {
+
+                                })
+                            }
+                            else {
+                                $.notify(response.message, "error");
+                            }
+                        },
+                        error: function (xhr) {
+                            $.notify("Error", "error");
+                        }
+                    });
+                }
 
             });
             calendar.render();
