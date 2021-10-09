@@ -26,21 +26,28 @@ document.addEventListener('DOMContentLoaded', function () {
                 select: function (event) {
                     onShowModal(event, null);
                 },
-                event: function (fetchInfo, successCallback, failureCallback) {
+                events: function (fetchInfo, successCallback, failureCallback) {
                     $.ajax({
                         url: routeURL + '/api/Vacation/GetCalendarData?workerId=' + $("#appWorkerId").val(),
                         type: 'GET',
                         dataType: 'JSON',
                         success: function (response) {
-                            var events[];
+                            var events=[];
                             if (response.status === 1) {
                                 $.each(response.dataenum, function (i, data) {
-
+                                    events.push({
+                                        title: data.title,
+                                        description: data.description,
+                                        start: new Date(data.startDate),
+                                        end: new Date(data.endDate),
+                                        backgroundColor: data.isApproved ? "#28a745" : "#dc3545",
+                                        borderColor: "#162466",
+                                        textColor: "white",
+                                        id: data.id
+                                    });
                                 })
                             }
-                            else {
-                                $.notify(response.message, "error");
-                            }
+                            successCallback(events);
                         },
                         error: function (xhr) {
                             $.notify("Error", "error");

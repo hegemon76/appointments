@@ -58,10 +58,12 @@ namespace appointments.Controllers.API
                 if (role == Helper.Helper.AppWorker)
                 {
                     commonResponse.dataenum = _vacationService.VacationsEventById(loginUserId);
+                    commonResponse.status = Helper.Helper.success_code;
                 }
                 else
                 {
                     commonResponse.dataenum = _vacationService.VacationsEventById(workerId);
+                    commonResponse.status = Helper.Helper.success_code;
                 }
             }
             catch (Exception e)
