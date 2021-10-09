@@ -32,14 +32,17 @@ document.addEventListener('DOMContentLoaded', function () {
                         type: 'GET',
                         dataType: 'JSON',
                         success: function (response) {
-                            var events=[];
+                            var events = [];
                             if (response.status === 1) {
                                 $.each(response.dataenum, function (i, data) {
+                                    //workaround becouse end date was exclusively so we have to add 1 day
+                                    var endDate = moment(data.endDate).add(1, 'day').format("YYYY-MM-DD");
                                     events.push({
+                                        allDay: true,
                                         title: data.title,
                                         description: data.description,
                                         start: new Date(data.startDate),
-                                        end: new Date(data.endDate),
+                                        end: endDate,
                                         backgroundColor: data.isApproved ? "#28a745" : "#dc3545",
                                         borderColor: "#162466",
                                         textColor: "white",
@@ -54,7 +57,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     });
                 }
-
             });
             calendar.render();
         } else
