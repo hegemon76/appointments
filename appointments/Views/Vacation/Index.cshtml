@@ -6,7 +6,19 @@
         {
             <div class="form-group row col-2" id="divAppWorkerList">
                 <label>Wybierz pracownika</label>
-                @Html.DropDownList("appWorkerId", new SelectList(ViewBag.WorkerList, "Id", "Name"), new { @class = "form-control select2" })
+                @Html.DropDownList("appWorkerId", new SelectList(ViewBag.WorkerList, "Id", "Name"),
+               new
+                    {
+                        @class = "form-control select2",
+                   @onchange = "OnWorkerChange();"
+               })
+            </div>
+        }
+        else
+        {
+            <div class="form-group row col-2" id="divAppWorkerList">
+                <label>Pracownik</label>
+                <label>@ViewBag.CurrentUser.Name</label>
             </div>
         }
         <div id="calendar"></div>

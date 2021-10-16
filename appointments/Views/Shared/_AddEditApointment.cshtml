@@ -1,9 +1,18 @@
-﻿<div class="modal fade" role="dialog" id="appointmentInput" data-backdrop="static" data-keyboard="false">
+﻿@using appointments.Helper;
+
+<div class="modal fade" role="dialog" id="appointmentInput" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog">
         <div class="modal-content">
             <form id="appointmentForm" autocomplete="off" novalidate="novalidate">
                 <div class="modal-header">
-                    <h4 class="modal-title">Dodaj/Usuń urlop</h4>
+                    @if (User.IsInRole(Helper.Admin))
+                    {
+                        <h4 class="modal-title">Dodaj/Edytuj urlop</h4>
+                    }
+                    else
+                    {
+                        <h4 class="modal-title">Dodaj urlop</h4>
+                    }
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
@@ -14,9 +23,23 @@
                         <label for="description">Opis</label>
                         <input type="text" class="form-control" id="description" />
                     </div>
+                    @if (User.IsInRole(Helper.AppWorker))
+                    {
+                        <div class="form-group">
+                            <label for="lblWorkerName">Pracownik: </label>
+                            <label>@ViewBag.CurrentUser.Name</label>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="form-group">
+                            <label for="title">Wybierz pracownika</label>
+                            <select id="workerId" asp-items="@(new SelectList(ViewBag.WorkerList,"Id", "Name"))" class="form-control"></select>
+                        </div>
+                    }
                     <div class="form-group">
-                        <label for="title">Wybierz pracownika</label>
-                        <select id="workerId" asp-items="@(new SelectList(ViewBag.WorkerList,"Id", "Name"))" class="form-control"></select>
+                        <label for="lblStatus">Status: </label>
+                        <label class="form-control" disabled id="lblStatus">Status</label>
                     </div>
                     <div class="row">
                         <div class="form-group col-6">
@@ -36,7 +59,24 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="onCloseModal();">Zamknij</button> &nbsp;
-                    <button type="button" class="btn btn-primary" onclick="onSubmitForm();">Wyślij</button> &nbsp;
+                    @if (User.IsInRole(appointments.Helper.Helper.Admin))
+                    {
+                        <button type="button" class="btn btn-primary" onclick="onSubmitForm();">Wyślij</button>
+                        <button type="button" class="btn btn-primary" onclick="onConfirmEvent();">Zaakceptuj</button>
+                        <button type="button" class="btn btn-danger hidden"
+                                onclick="onDeleteEvent();">
+                            Usuń
+                        </button>
+
+                    }
+                    @if (User.IsInRole(appointments.Helper.Helper.AppWorker))
+                    {
+                        <button type="button" class="btn btn-primary" onclick="onSubmitForm();">Wyślij</button>
+                        <button type="button" class="btn btn-danger hidden"
+                                onclick="onDeleteEvent();">
+                            Usuń
+                        </button>
+                    }
                 </div>
             </form>
         </div>

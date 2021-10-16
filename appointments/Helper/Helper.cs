@@ -15,6 +15,8 @@ namespace appointments.Helper
         public static string vacationDeleted = "Urlop usunięty poprawnie.";
         public static string vacationExists = "Dla wybranych dat urlop juz istnieje.";
         public static string vacationNotExists = "Urlop nie istnieje.";
+        public static string somethingWentWrong = "Ups. Cos poszło nie tak.";
+        public static string vacationConfirmed = "Urlop zatwierdzony.";
         public static int success_code = 1;
         public static int failure_code = 0;
 

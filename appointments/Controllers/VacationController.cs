@@ -1,5 +1,7 @@
 ﻿using appointments.Services;
 using Microsoft.AspNetCore.Mvc;
+using appointments.Helper;
+using System.Collections.Generic;
 
 namespace appointments.Controllers
 {
@@ -12,7 +14,14 @@ namespace appointments.Controllers
         }
         public IActionResult Index()
         {
-           ViewBag.WorkerList = _appointmentService.GetWorkerList();
+            if (User.IsInRole(Helper.Helper.Admin))
+            {
+                ViewBag.WorkerList = _appointmentService.GetWorkerList();
+            }
+            else
+            {
+                ViewBag.CurrentUser = _appointmentService.GetCurrentUser();
+            }
             return View();
         }
     }

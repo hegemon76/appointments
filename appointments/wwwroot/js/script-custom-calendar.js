@@ -1,11 +1,8 @@
 ﻿var routeURL = location.protocol + "//" + location.host;
+var calendar;
 
 document.addEventListener('DOMContentLoaded', function () {
-
-    var calendar;
     try {
-
-
         var calendarEl = document.getElementById('calendar');
         if (calendarEl != null) {
             calendar = new FullCalendar.Calendar(calendarEl, {
@@ -26,42 +23,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 select: function (event) {
                     onShowModal(event, null);
                 },
+                eventDisplay: 'block',
                 events: function (fetchInfo, successCallback, failureCallback) {
-                    $.ajax({
-                        url: routeURL + '/api/Vacation/GetCalendarData?workerId=' + $("#appWorkerId").val(),
-                        type: 'GET',
-                        dataType: 'JSON',
-                        success: function (response) {
-                            var events = [];
-                            if (response.status === 1) {
-                                $.each(response.dataenum, function (i, data) {
-                                    //workaround becouse end date was exclusively so we have to add 1 day
-                                    var endDate = moment(data.endDate).add(1, 'day').format("YYYY-MM-DD");
-                                    events.push({
-                                        allDay: true,
-                                        title: data.title,
-                                        description: data.description,
-                                        start: new Date(data.startDate),
-                                        end: endDate,
-                                        backgroundColor: data.isApproved ? "#28a745" : "#dc3545",
-                                        borderColor: "#162466",
-                                        textColor: "white",
-                                        id: data.id
-                                    });
-                                })
-                            }
-                            successCallback(events);
-                        },
-                        error: function (xhr) {
-                            $.notify("Error", "error");
-                        }
-                    });
+                    GetCalendarData(successCallback);
+                },
+                eventClick: function (info) {
+                    getEventDetailsByEventId(info.event);
                 }
             });
             calendar.render();
-        } else
-            alert(calendarEl);
-
+        }
     }
     catch (e) {
         alert(e);
@@ -71,19 +42,48 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 function onShowModal(obj, isEventDetails) {
-    var x = new moment(obj.startStr);
-    var y = new moment(obj.endStr);
-    var startDate = moment(obj.startStr).format("YYYY-MM-DD");
-    var endDate = moment(obj.endStr).subtract(1, 'day').format("YYYY-MM-DD");
-    var duration = y.diff(x, 'days');
+    if (isEventDetails != null) {
+        $("#id").val(obj.id);
+        $('#title').val(obj.title);
+        $("#description").val(obj.description);
+        var startDate = moment(obj.startDate).format("YYYY-MM-DD");
+        $('#dateFrom').val(startDate);
+        var endDate = moment(obj.endDate).format("YYYY-MM-DD");
+        $('#dateEnd').val(endDate);
+        $('#duration').val(obj.duration);
+        $("#appWorkerId").val(obj.appWorkerId);
+        if (obj.IsApproved) {
+            $("#lblStatus").html('Zaakceptowany');
+        }
+        else
+            $("#lblStatus").html('W trakcie akceptacji');
+    }
+    else {
+        var x = new moment(obj.startStr);
+        var y = new moment(obj.endStr);
+        var startDate = moment(obj.startStr).format("YYYY-MM-DD");
+        var endDate = moment(obj.endStr).subtract(1, 'day').format("YYYY-MM-DD");
+        var duration = y.diff(x, 'days');
+        if (duration == 0)
+            duration = 1;
 
-    $('#dateFrom').val(startDate);
-    $('#dateEnd').val(endDate);
-    $('#duration').val(duration);
+        $('#dateFrom').val(startDate);
+        $('#dateEnd').val(endDate);
+        $('#duration').val(duration);
+    }
     $("#appointmentInput").modal("show");
+
 }
 
 function onCloseModal() {
+    $("#appointmentForm")[0].reset();
+    $("#id").val(0);
+    $("#title").val('');
+    $("#description").val('');
+    $("#dateFrom").val('');
+    $("#dateEnd").val('');
+    $("#duration").val('');
+
     $("#appointmentInput").modal("hide");
 }
 
@@ -107,6 +107,7 @@ function onSubmitForm() {
             contentType: 'application/json',
             success: function (response) {
                 if (response.status === 1 || response.status === 2) {
+                    calendar.refetchEvents();
                     $.notify(response.message, "success");
                     onCloseModal();
                 }
@@ -152,4 +153,103 @@ function checkValidation() {
         $("#dateEnd").removeClass('error');
 
     return isValid;
+}
+
+function getEventDetailsByEventId(info) {
+    $.ajax({
+        url: routeURL + '/api/Vacation/GetCalendarDataById/' + info.id,
+        type: 'GET',
+        dataType: 'JSON',
+        success: function (response) {
+
+            if (response.status === 1 && response.dataenum != undefined) {
+                onShowModal(response.dataenum, true);
+            }
+            //successCallback(events);
+        },
+        error: function (xhr) {
+            $.notify("Error", "error");
+        }
+    });
+}
+
+function GetCalendarData(successCallback) {
+
+    $.ajax({
+        url: routeURL + '/api/Vacation/GetCalendarData?workerId=' + $("#appWorkerId").val(),
+        type: 'GET',
+        dataType: 'JSON',
+        success: function (response) {
+            var events = [];
+            if (response.status === 1) {
+                $.each(response.dataenum, function (i, data) {
+                    //workaround becouse end date was exclusively so we have to add 1 day
+                    var endDate = moment(data.endDate).add(1, 'day').format("YYYY-MM-DD");
+                    events.push({
+                        allDay: true,
+                        title: data.title,
+                        description: data.description,
+                        start: new Date(data.startDate),
+                        end: endDate,
+                        backgroundColor: data.isApproved ? "#28a745" : "#dc3545",
+                        borderColor: "#162466",
+                        textColor: "white",
+                        id: data.id
+                    });
+                })
+            }
+            successCallback(events);
+        },
+        error: function (xhr) {
+            $.notify("Error", "error");
+        }
+    });
+}
+
+function OnWorkerChange() {
+    calendar.refetchEvents();
+}
+
+function onDeleteEvent() {
+    var id = parseInt($("#id").val());
+    $.ajax({
+        url: routeURL + '/api/Vacation/DeleteVacation/' + id,
+        type: 'GET',
+        dataType: 'JSON',
+        success: function (response) {
+            if (response.status === 1) {
+                calendar.refetchEvents();
+                $.notify(response.message, 'success');
+                onCloseModal();
+            }
+            else {
+                $.notify(response.message, "error");
+            }
+        },
+        error: function (xhr) {
+            $.notify("Error", "error");
+        }
+    });
+}
+
+function onConfirmEvent() {
+    var id = parseInt($("#id").val());
+    $.ajax({
+        url: routeURL + '/api/Vacation/ConfirmEvent/' + id,
+        type: 'GET',
+        dataType: 'JSON',
+        success: function (response) {
+            if (response.status === 1) {
+                $.notify(response.message, 'success');
+                calendar.refetchEvents();
+                onCloseModal();
+            }
+            else {
+                $.notify(response.message, "error");
+            }
+        },
+        error: function (xhr) {
+            $.notify("Error", "error");
+        }
+    });
 }

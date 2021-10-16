@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace appointments.Controllers.API
 {
@@ -32,6 +33,9 @@ namespace appointments.Controllers.API
             CommonResponse<int> commonResponse = new CommonResponse<int>();
             try
             {
+                if (data.AppWorkerId == null)
+                    data.AppWorkerId = loginUserId;
+
                 commonResponse.status = _vacationService.AddUpdate(data).Result;
                 if (commonResponse.status == 1)
                     commonResponse.message = Helper.Helper.vacationUpdated;
@@ -64,6 +68,73 @@ namespace appointments.Controllers.API
                 {
                     commonResponse.dataenum = _vacationService.VacationsEventById(workerId);
                     commonResponse.status = Helper.Helper.success_code;
+                }
+            }
+            catch (Exception e)
+            {
+                commonResponse.message = e.Message;
+                commonResponse.status = Helper.Helper.failure_code;
+            }
+            return Ok(commonResponse);
+        }
+
+
+        [HttpGet]
+        [Route("GetCalendarDataById/{id}")]
+        public IActionResult GetCalendarDataById(int id)
+        {
+            CommonResponse<VacationViewModel> commonResponse = new CommonResponse<VacationViewModel>();
+            try
+            {
+
+                commonResponse.dataenum = _vacationService.GetById(id);
+                commonResponse.status = Helper.Helper.success_code;
+
+            }
+            catch (Exception e)
+            {
+                commonResponse.message = e.Message;
+                commonResponse.status = Helper.Helper.failure_code;
+            }
+            return Ok(commonResponse);
+        }
+
+        [HttpGet]
+        [Route("DeleteVacation/{id}")]
+        public async Task<IActionResult> DeleteVacation(int id)
+        {
+            CommonResponse<int> commonResponse = new CommonResponse<int>();
+            try
+            {
+                commonResponse.status = await _vacationService.DeleteEvent(id);
+                commonResponse.message = commonResponse.status == 1
+                    ? Helper.Helper.vacationDeleted : Helper.Helper.somethingWentWrong;
+            }
+            catch (Exception e)
+            {
+                commonResponse.message = e.Message;
+                commonResponse.status = Helper.Helper.failure_code;
+            }
+            return Ok(commonResponse);
+        }
+
+        [HttpGet]
+        [Route("ConfirmEvent/{id}")]
+        public async Task<IActionResult> ConfirmEvent(int id)
+        {
+            CommonResponse<int> commonResponse = new CommonResponse<int>();
+            try
+            {
+                var result = await _vacationService.ConfirmEvent(id);
+                if (result > 0)
+                {
+                    commonResponse.status = Helper.Helper.success_code;
+                    commonResponse.message = Helper.Helper.vacationConfirmed;
+                }
+                else
+                {
+                    commonResponse.status = Helper.Helper.failure_code;
+                    commonResponse.message = Helper.Helper.somethingWentWrong;
                 }
             }
             catch (Exception e)
