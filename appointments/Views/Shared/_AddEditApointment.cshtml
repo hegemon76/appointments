@@ -26,20 +26,21 @@
                     @if (User.IsInRole(Helper.AppWorker))
                     {
                         <div class="form-group">
-                            <label for="lblWorkerName">Pracownik: </label>
-                            <label>@ViewBag.CurrentUser.Name</label>
+                            <label hidden for="lblWorkerName">Pracownik: </label>
+                            <label hidden>@ViewBag.CurrentUser.Name</label>
                         </div>
                     }
                     else
                     {
                         <div class="form-group">
                             <label for="title">Wybierz pracownika</label>
-                            <select id="workerId" asp-items="@(new SelectList(ViewBag.WorkerList,"Id", "Name"))" class="form-control"></select>
+                            <select id="workerId" asp-items="@(new SelectList(ViewBag.WorkerList,"Id", "Name"))"
+                                    class="form-control"></select>
                         </div>
                     }
                     <div class="form-group">
                         <label for="lblStatus">Status: </label>
-                        <label class="form-control" disabled id="lblStatus">Status</label>
+                        <label class="form-control" disabled id="lblStatus">Brak statusu</label>
                     </div>
                     <div class="row">
                         <div class="form-group col-6">
@@ -58,12 +59,12 @@
                     <input type="hidden" id="id" />
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="onCloseModal();">Zamknij</button> &nbsp;
+                    <button type="button" class="btn btn-secondary" id="btnClose" onclick="onCloseModal();">Zamknij</button> &nbsp;
                     @if (User.IsInRole(appointments.Helper.Helper.Admin))
                     {
-                        <button type="button" class="btn btn-primary" onclick="onSubmitForm();">Wyślij</button>
-                        <button type="button" class="btn btn-primary" onclick="onConfirmEvent();">Zaakceptuj</button>
-                        <button type="button" class="btn btn-danger hidden"
+                        <button type="button" class="btn btn-primary" id="btnSend" onclick="onSubmitForm();">Wyślij</button>
+                        <button type="button" class="btn btn-primary" id="btnConfirm" onclick="onConfirmEvent();">Zaakceptuj</button>
+                        <button type="button" id="btnDelete" class="btn btn-danger hidden"
                                 onclick="onDeleteEvent();">
                             Usuń
                         </button>

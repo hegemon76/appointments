@@ -45,20 +45,43 @@ function onShowModal(obj, isEventDetails) {
     if (isEventDetails != null) {
         $("#id").val(obj.id);
         $('#title').val(obj.title);
+        $('#duration').val(obj.duration);
+        $("#appWorkerId").val(obj.appWorkerId);
+        $('#btnSend').html('Wyślij');
+
         $("#description").val(obj.description);
         var startDate = moment(obj.startDate).format("YYYY-MM-DD");
         $('#dateFrom').val(startDate);
         var endDate = moment(obj.endDate).format("YYYY-MM-DD");
         $('#dateEnd').val(endDate);
-        $('#duration').val(obj.duration);
-        $("#appWorkerId").val(obj.appWorkerId);
-        if (obj.IsApproved) {
+
+        if (obj.isApproved) {
             $("#lblStatus").html('Zaakceptowany');
+            $("#workerId").attr("disabled", true);
+            /// buttons
+            $('#btnDelete').hide();
+            $('#btnSend').hide();
+            $('#btnConfirm').hide();
         }
-        else
+        else {
             $("#lblStatus").html('W trakcie akceptacji');
+            $("#workerId").attr("disabled", false);
+
+            /// buttons
+            $('#btnDelete').show();
+            $('#btnSend').show();
+            $('#btnSend').html('Zaktualizuj');
+            $('#btnConfirm').show();
+        }
     }
     else {
+        $("#workerId").attr("disabled", false);
+        /// buttons
+        $('#btnDelete').hide();
+        $('#btnSend').show();
+        $('#btnSend').html('Wyślij');
+        $('#btnConfirm').hide();
+
         var x = new moment(obj.startStr);
         var y = new moment(obj.endStr);
         var startDate = moment(obj.startStr).format("YYYY-MM-DD");
@@ -76,14 +99,13 @@ function onShowModal(obj, isEventDetails) {
 }
 
 function onCloseModal() {
-    $("#appointmentForm")[0].reset();
+    $('#appointmentForm')[0].reset();
     $("#id").val(0);
     $("#title").val('');
     $("#description").val('');
     $("#dateFrom").val('');
     $("#dateEnd").val('');
     $("#duration").val('');
-
     $("#appointmentInput").modal("hide");
 }
 
@@ -127,32 +149,6 @@ function onDataUpdate(value) {
     var y = new moment(document.getElementById('dateEnd').value);
     var duration = y.diff(x, 'days');
     $('#duration').val(duration + 1);
-}
-
-function checkValidation() {
-    var isValid = true;
-    if ($("#title").val() === undefined || $("#title").val() === "") {
-        isValid = false;
-        $("#title").addClass('error');
-    }
-    else
-        $("#title").removeClass('error');
-
-    if ($("#dateFrom").val() === undefined || $("#dateFrom").val() === "") {
-        isValid = false;
-        $("#dateFrom").addClass('error');
-    }
-    else
-        $("#dateFrom").removeClass('error');
-
-    if ($("#dateEnd").val() === undefined || $("#dateEnd").val() === "") {
-        isValid = false;
-        $("#dateEnd").addClass('error');
-    }
-    else
-        $("#dateEnd").removeClass('error');
-
-    return isValid;
 }
 
 function getEventDetailsByEventId(info) {
@@ -208,6 +204,8 @@ function GetCalendarData(successCallback) {
 
 function OnWorkerChange() {
     calendar.refetchEvents();
+    selectedWorker = $('#appWorkerId').val();
+    $('#workerId').val(selectedWorker);
 }
 
 function onDeleteEvent() {
@@ -252,4 +250,32 @@ function onConfirmEvent() {
             $.notify("Error", "error");
         }
     });
+}
+
+/// === Helpers === ///
+
+function checkValidation() {
+    var isValid = true;
+    if ($("#title").val() === undefined || $("#title").val() === "") {
+        isValid = false;
+        $("#title").addClass('error');
+    }
+    else
+        $("#title").removeClass('error');
+
+    if ($("#dateFrom").val() === undefined || $("#dateFrom").val() === "") {
+        isValid = false;
+        $("#dateFrom").addClass('error');
+    }
+    else
+        $("#dateFrom").removeClass('error');
+
+    if ($("#dateEnd").val() === undefined || $("#dateEnd").val() === "") {
+        isValid = false;
+        $("#dateEnd").addClass('error');
+    }
+    else
+        $("#dateEnd").removeClass('error');
+
+    return isValid;
 }
