@@ -1,8 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace appointments.Helper
 {
@@ -17,6 +14,7 @@ namespace appointments.Helper
         public static string vacationNotExists = "Urlop nie istnieje.";
         public static string somethingWentWrong = "Ups. Cos poszło nie tak.";
         public static string vacationConfirmed = "Urlop zatwierdzony.";
+        public static string operationNotAllowed = "Operacja nie jest dozwolona.";
         public static int success_code = 1;
         public static int failure_code = 0;
 

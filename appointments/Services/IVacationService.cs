@@ -14,5 +14,6 @@ namespace appointments.Services
         public VacationViewModel GetById(int id);
         public Task<int> DeleteEvent(int id);
         public Task<int> ConfirmEvent(int id);
+        public Task<int> RejectEvent(int id);
     }
 }

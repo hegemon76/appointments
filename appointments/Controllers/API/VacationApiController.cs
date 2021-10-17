@@ -42,6 +42,9 @@ namespace appointments.Controllers.API
 
                 if (commonResponse.status == 2)
                     commonResponse.message = Helper.Helper.vacationAdded;
+
+                if (commonResponse.status == 3)
+                    commonResponse.message = Helper.Helper.operationNotAllowed;
             }
             catch (Exception e)
             {
@@ -130,6 +133,38 @@ namespace appointments.Controllers.API
                 {
                     commonResponse.status = Helper.Helper.success_code;
                     commonResponse.message = Helper.Helper.vacationConfirmed;
+                }
+                else
+                {
+                    commonResponse.status = Helper.Helper.failure_code;
+                    commonResponse.message = Helper.Helper.somethingWentWrong;
+                }
+            }
+            catch (Exception e)
+            {
+                commonResponse.message = e.Message;
+                commonResponse.status = Helper.Helper.failure_code;
+            }
+            return Ok(commonResponse);
+        }
+
+        [HttpGet]
+        [Route("RejectEvent/{id}")]
+        public async Task<IActionResult> RejectEvent(int id)
+        {
+            CommonResponse<int> commonResponse = new CommonResponse<int>();
+            try
+            {
+                var result = await _vacationService.RejectEvent(id);
+                if (result == 1)
+                {
+                    commonResponse.status = Helper.Helper.success_code;
+                    commonResponse.message = Helper.Helper.vacationConfirmed;
+                }
+                else if(result == 4)
+                {
+                    commonResponse.status = Helper.Helper.failure_code;
+                    commonResponse.message = Helper.Helper.operationNotAllowed;
                 }
                 else
                 {

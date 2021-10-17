@@ -15,6 +15,7 @@ namespace appointments.Models
         public int Duration { get; set; }
         public string AppWorkerId { get; set; }
         public bool IsApproved { get; set; }
+        public bool IsRejected { get; set; }
         public string AdminId { get; set; }
     }
 }

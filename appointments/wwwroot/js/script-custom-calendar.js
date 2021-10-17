@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 initialView: 'dayGridMonth',
                 firstDay: 1,
                 locale: 'pl',
+                aspectRatio: 2.5,
                 buttonText: {
                     month: 'Miesiąc',
                     today: 'Dzisiaj'
@@ -37,12 +38,11 @@ document.addEventListener('DOMContentLoaded', function () {
     catch (e) {
         alert(e);
     }
-
-
 });
 
+//#region modal events
 function onShowModal(obj, isEventDetails) {
-    if (isEventDetails != null) {
+    if (isEventDetails != null) { ///show event details
         $("#id").val(obj.id);
         $('#title').val(obj.title);
         $('#duration').val(obj.duration);
@@ -55,32 +55,21 @@ function onShowModal(obj, isEventDetails) {
         var endDate = moment(obj.endDate).format("YYYY-MM-DD");
         $('#dateEnd').val(endDate);
 
-        if (obj.isApproved) {
-            $("#lblStatus").html('Zaakceptowany');
-            $("#workerId").attr("disabled", true);
-            /// buttons
-            $('#btnDelete').hide();
-            $('#btnSend').hide();
-            $('#btnConfirm').hide();
+        if (obj.isRejected) {
+            eventRejectedFooter();
+            $('#lblStatus').html('Odrzucony');
         }
         else {
-            $("#lblStatus").html('W trakcie akceptacji');
-            $("#workerId").attr("disabled", false);
+            if (obj.isApproved)
+                eventApprovedFooter();
 
-            /// buttons
-            $('#btnDelete').show();
-            $('#btnSend').show();
-            $('#btnSend').html('Zaktualizuj');
-            $('#btnConfirm').show();
+            else
+                eventNotApprovedFooter();
         }
     }
-    else {
+    else {/// create new event
         $("#workerId").attr("disabled", false);
-        /// buttons
-        $('#btnDelete').hide();
-        $('#btnSend').show();
-        $('#btnSend').html('Wyślij');
-        $('#btnConfirm').hide();
+        $('#lblStatus').html('Brak');
 
         var x = new moment(obj.startStr);
         var y = new moment(obj.endStr);
@@ -92,10 +81,11 @@ function onShowModal(obj, isEventDetails) {
 
         $('#dateFrom').val(startDate);
         $('#dateEnd').val(endDate);
+
         $('#duration').val(duration);
+        newEventFooter();
     }
     $("#appointmentInput").modal("show");
-
 }
 
 function onCloseModal() {
@@ -109,11 +99,20 @@ function onCloseModal() {
     $("#appointmentInput").modal("hide");
 }
 
+function onDataUpdate(value) {
+    var x = new moment(document.getElementById('dateFrom').value);
+    var y = new moment(document.getElementById('dateEnd').value);
+    var duration = y.diff(x, 'days');
+    $('#duration').val(duration + 1);
+}
+
+//#endregion
+
+//#region event operations - API calls
 function onSubmitForm() {
     if (checkValidation()) {
-
         var requestData = {
-            Id: parseInt($("#id")),
+            Id: parseInt($("#id").val()),
             Title: $("#title").val(),
             Description: $("#description").val(),
             StartDate: $("#dateFrom").val(),
@@ -121,7 +120,6 @@ function onSubmitForm() {
             AppWorkerId: $("#appWorkerId").val(),
             Duration: $("#duration").val(),
         }
-
         $.ajax({
             url: routeURL + '/api/Vacation/SaveCalendarData',
             type: 'POST',
@@ -142,70 +140,6 @@ function onSubmitForm() {
             }
         });
     }
-}
-
-function onDataUpdate(value) {
-    var x = new moment(document.getElementById('dateFrom').value);
-    var y = new moment(document.getElementById('dateEnd').value);
-    var duration = y.diff(x, 'days');
-    $('#duration').val(duration + 1);
-}
-
-function getEventDetailsByEventId(info) {
-    $.ajax({
-        url: routeURL + '/api/Vacation/GetCalendarDataById/' + info.id,
-        type: 'GET',
-        dataType: 'JSON',
-        success: function (response) {
-
-            if (response.status === 1 && response.dataenum != undefined) {
-                onShowModal(response.dataenum, true);
-            }
-            //successCallback(events);
-        },
-        error: function (xhr) {
-            $.notify("Error", "error");
-        }
-    });
-}
-
-function GetCalendarData(successCallback) {
-
-    $.ajax({
-        url: routeURL + '/api/Vacation/GetCalendarData?workerId=' + $("#appWorkerId").val(),
-        type: 'GET',
-        dataType: 'JSON',
-        success: function (response) {
-            var events = [];
-            if (response.status === 1) {
-                $.each(response.dataenum, function (i, data) {
-                    //workaround becouse end date was exclusively so we have to add 1 day
-                    var endDate = moment(data.endDate).add(1, 'day').format("YYYY-MM-DD");
-                    events.push({
-                        allDay: true,
-                        title: data.title,
-                        description: data.description,
-                        start: new Date(data.startDate),
-                        end: endDate,
-                        backgroundColor: data.isApproved ? "#28a745" : "#dc3545",
-                        borderColor: "#162466",
-                        textColor: "white",
-                        id: data.id
-                    });
-                })
-            }
-            successCallback(events);
-        },
-        error: function (xhr) {
-            $.notify("Error", "error");
-        }
-    });
-}
-
-function OnWorkerChange() {
-    calendar.refetchEvents();
-    selectedWorker = $('#appWorkerId').val();
-    $('#workerId').val(selectedWorker);
 }
 
 function onDeleteEvent() {
@@ -252,7 +186,142 @@ function onConfirmEvent() {
     });
 }
 
+function onRejectEvent() {
+    var id = parseInt($("#id").val());
+    $.ajax({
+        url: routeURL + '/api/Vacation/RejectEvent/' + id,
+        type: 'GET',
+        dataType: 'JSON',
+        success: function (response) {
+            if (response.status === 1) {
+                $.notify(response.message, 'success');
+                calendar.refetchEvents();
+                onCloseModal();
+            }
+            else {
+                $.notify(response.message, "error");
+            }
+        },
+        error: function (xhr) {
+            $.notify("Error", "error");
+        }
+    });
+}
+
+function getEventDetailsByEventId(info) {
+    $.ajax({
+        url: routeURL + '/api/Vacation/GetCalendarDataById/' + info.id,
+        type: 'GET',
+        dataType: 'JSON',
+        success: function (response) {
+
+            if (response.status === 1 && response.dataenum != undefined) {
+                onShowModal(response.dataenum, true);
+            }
+            //successCallback(events);
+        },
+        error: function (xhr) {
+            $.notify("Error", "error");
+        }
+    });
+}
+
+function GetCalendarData(successCallback) {
+
+    $.ajax({
+        url: routeURL + '/api/Vacation/GetCalendarData?workerId=' + $("#appWorkerId").val(),
+        type: 'GET',
+        dataType: 'JSON',
+        success: function (response) {
+            var events = [];
+            if (response.status === 1) {
+                $.each(response.dataenum, function (i, data) {
+                    //workaround becouse end date was exclusively so we have to add 1 day
+                    var endDate = moment(data.endDate).add(1, 'day').format("YYYY-MM-DD");
+                    events.push({
+                        allDay: true,
+                        title: data.title,
+                        description: data.description,
+                        start: new Date(data.startDate),
+                        end: endDate,
+                        backgroundColor: getEventBgColor(data),
+                        borderColor: "#162466",
+                        textColor: "white",
+                        id: data.id
+                    });
+                })
+            }
+            successCallback(events);
+        },
+        error: function (xhr) {
+            $.notify("Error", "error");
+        }
+    });
+}
+
+//#endregion
+
+
+
+function OnWorkerChange() {
+    calendar.refetchEvents();
+    selectedWorker = $('#appWorkerId').val();
+    $('#workerId').val(selectedWorker);
+}
+
 /// === Helpers === ///
+
+//#region footer buttons
+function eventRejectedFooter() {
+    $('#btnDelete').hide();
+    $('#btnSend').hide();
+    $('#btnConfirm').hide();
+    $('#btnReject').hide();
+}
+
+function eventApprovedFooter() {
+    $("#lblStatus").html('Zaakceptowany');
+    $("#workerId").attr("disabled", true);
+    /// buttons
+    $('#btnDelete').hide();
+    $('#btnSend').hide();
+    $('#btnConfirm').hide();
+    $('#btnReject').hide();
+}
+
+function eventNotApprovedFooter() {
+    $("#lblStatus").html('W trakcie akceptacji');
+    $("#workerId").attr("disabled", false);
+
+    /// buttons
+    $('#btnDelete').show();
+    $('#btnSend').show();
+    $('#btnSend').html('Zaktualizuj');
+    $('#btnConfirm').show();
+    $('#btnReject').show();
+}
+
+function newEventFooter() {
+    /// buttons
+    $('#btnDelete').hide();
+    $('#btnSend').show();
+    $('#btnSend').html('Wyślij');
+    $('#btnConfirm').hide();
+    $('#btnReject').hide();
+}
+
+//#endregion
+
+function getEventBgColor(data) {
+    var bgColor;
+    if (data.isRejected) {
+        bgColor = '#CACACA';
+    }
+    else {
+        data.isApproved ? bgColor = "#28a745" : bgColor = "#dc3545"
+    }
+    return bgColor;
+}
 
 function checkValidation() {
     var isValid = true;

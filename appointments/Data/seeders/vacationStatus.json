@@ -1,0 +1,18 @@
+[
+    {
+        "Id": 1,
+        "StatusText": "Zaakceptowany"
+    },
+    {
+        "Id": 2,
+        "StatusText": "Odrzucony"
+    },
+    {
+        "Id": 3,
+        "StatusText": "W trakcie akceptacji"
+    },
+    {
+        "Id": 4,
+        "StatusText": "Wymagany kontakt z przełożonym"
+    }
+]

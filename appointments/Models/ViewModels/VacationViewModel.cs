@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace appointments.Models.ViewModels
+﻿namespace appointments.Models.ViewModels
 {
     public class VacationViewModel
     {
@@ -15,8 +10,10 @@ namespace appointments.Models.ViewModels
         public int Duration { get; set; }
         public string AppWorkerId { get; set; }
         public bool IsApproved { get; set; }
+        public bool IsRejected { get; set; }
         public string AdminId { get; set; }
         public string AdminName { get; set; }
         public bool IsForClient { get; set; }
+        public int StatusId { get; set; }
     }
 }

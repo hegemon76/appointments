@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using appointments.Data;
 
 namespace appointments.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20211017163605_AddVacationStatus")]
+    partial class AddVacationStatus
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -270,28 +272,6 @@ namespace appointments.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("VacationStatus");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            StatusText = "Zaakceptowany"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            StatusText = "Odrzucony"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            StatusText = "W trakcie akceptacji"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            StatusText = "Wymagany kontakt z przełożonym"
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

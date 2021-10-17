@@ -31,7 +31,21 @@ namespace appointments.Services
             if (model != null && model.Id > 0)
             {
                 //update
-                return 1;
+                var vacation = _db.Vacations.FirstOrDefault(x => x.Id == model.Id);
+                if (!vacation.IsApproved && !vacation.IsRejected)
+                {
+                    vacation.Title = model.Title;
+                    vacation.Description = model.Description;
+                    vacation.StartDate = startDate;
+                    vacation.EndDate = endDate;
+                    vacation.Duration = model.Duration;
+                    vacation.IsApproved = model.IsApproved;
+                    vacation.AppWorkerId = model.AppWorkerId;
+                    vacation.AdminId = model.AdminId;
+                    await _db.SaveChangesAsync();
+                    return 1;
+                }
+                return 3;
             }
             else
             {
@@ -43,7 +57,8 @@ namespace appointments.Services
                     StartDate = startDate,
                     EndDate = endDate,
                     Duration = model.Duration,
-                    IsApproved = model.IsApproved,
+                    IsApproved = false,
+                    IsRejected = false,
                     AppWorkerId = model.AppWorkerId,
                     AdminId = model.AdminId
                 };
@@ -52,7 +67,6 @@ namespace appointments.Services
                 await _db.SaveChangesAsync();
                 return 2;
             }
-
         }
 
         public List<AppWorkerViewModel> GetWorkerList()
@@ -91,7 +105,8 @@ namespace appointments.Services
                 EndDate = c.EndDate.ToString("yyyy-MM,dd"),
                 Title = c.Title,
                 Duration = c.Duration,
-                IsApproved = c.IsApproved
+                IsApproved = c.IsApproved,
+                IsRejected = c.IsRejected
             }).ToList();
         }
 
@@ -106,6 +121,7 @@ namespace appointments.Services
                 Title = c.Title,
                 Duration = c.Duration,
                 IsApproved = c.IsApproved,
+                IsRejected = c.IsRejected,
                 AppWorkerId = c.AppWorkerId
             }).SingleOrDefault();
         }
@@ -128,6 +144,22 @@ namespace appointments.Services
             {
                 vacation.IsApproved = true;
                 return await _db.SaveChangesAsync();
+            }
+            return 0;
+        }
+
+        public async Task<int> RejectEvent(int id)
+        {
+            var vacation = _db.Vacations.FirstOrDefault(x => x.Id == id);
+            if (vacation != null)
+            {
+                if (!vacation.IsApproved)
+                {
+                    vacation.IsRejected = true;
+                    await _db.SaveChangesAsync();
+                    return 1;
+                }
+                return 4;
             }
             return 0;
         }
