@@ -5,6 +5,14 @@ namespace appointments.Helper
 {
     public static class Helper
     {
+        public enum VacationStatus
+        {
+            Accepted = 1 ,
+            Rejected = 2,
+            Pending = 3,
+            ContactRequired = 4
+        }
+
         public static string Admin = "Admin";
         public static string AppWorker = "AppWorker";
         public static string vacationAdded = "Urlop dodany poprawnie.";

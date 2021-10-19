@@ -8,13 +8,13 @@ using System.Threading.Tasks;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 
 namespace appointments.Services
 {
     public class VacationService : IVacationService
     {
         private readonly ApplicationDbContext _db;
-        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IHttpContextAccessor _context;
 
         public VacationService(ApplicationDbContext db, IHttpContextAccessor context)
@@ -49,6 +49,8 @@ namespace appointments.Services
             }
             else
             {
+                VacationStatus vacationStatus = _db.VacationStatus
+                                                .FirstOrDefault(x => x.Id == (int)Helper.Helper.VacationStatus.Pending);
                 //create
                 Vacation vacation = new Vacation()
                 {
@@ -60,7 +62,8 @@ namespace appointments.Services
                     IsApproved = false,
                     IsRejected = false,
                     AppWorkerId = model.AppWorkerId,
-                    AdminId = model.AdminId
+                    AdminId = model.AdminId,
+                    VacationStatus = vacationStatus
                 };
 
                 _db.Vacations.Add(vacation);
@@ -97,22 +100,27 @@ namespace appointments.Services
 
         public List<VacationViewModel> VacationsEventById(string workerId)
         {
-            return _db.Vacations.Where(x => x.AppWorkerId == workerId).ToList().Select(c => new VacationViewModel()
-            {
-                Id = c.Id,
-                Description = c.Description,
-                StartDate = c.StartDate.ToString("yyyy-MM,dd"),
-                EndDate = c.EndDate.ToString("yyyy-MM,dd"),
-                Title = c.Title,
-                Duration = c.Duration,
-                IsApproved = c.IsApproved,
-                IsRejected = c.IsRejected
-            }).ToList();
+            if (workerId == null)
+                workerId = GetCurrentUser().Id;
+            return _db.Vacations.Include(x => x.VacationStatus)
+                .Where(x => x.AppWorkerId == workerId).ToList().Select(c => new VacationViewModel()
+                {
+                    Id = c.Id,
+                    Description = c.Description,
+                    StartDate = c.StartDate.ToString("yyyy-MM,dd"),
+                    EndDate = c.EndDate.ToString("yyyy-MM,dd"),
+                    Title = c.Title,
+                    Duration = c.Duration,
+                    IsApproved = c.IsApproved,
+                    IsRejected = c.IsRejected,
+                    StatusText = c.VacationStatus.StatusText
+                }).ToList();
         }
 
         public VacationViewModel GetById(int id)
         {
-            return _db.Vacations.Where(x => x.Id == id).ToList().Select(c => new VacationViewModel()
+            return _db.Vacations.Include(x => x.VacationStatus)
+                .Where(x => x.Id == id).ToList().Select(c => new VacationViewModel()
             {
                 Id = c.Id,
                 Description = c.Description,
@@ -122,7 +130,8 @@ namespace appointments.Services
                 Duration = c.Duration,
                 IsApproved = c.IsApproved,
                 IsRejected = c.IsRejected,
-                AppWorkerId = c.AppWorkerId
+                AppWorkerId = c.AppWorkerId,
+                StatusText = c.VacationStatus.StatusText
             }).SingleOrDefault();
         }
 
@@ -142,7 +151,9 @@ namespace appointments.Services
             var vacation = _db.Vacations.FirstOrDefault(x => x.Id == id);
             if (vacation != null)
             {
+                var vacationStatus = _db.VacationStatus.FirstOrDefault(x => x.Id == (int)Helper.Helper.VacationStatus.Accepted);
                 vacation.IsApproved = true;
+                vacation.VacationStatus = vacationStatus;
                 return await _db.SaveChangesAsync();
             }
             return 0;
@@ -155,7 +166,9 @@ namespace appointments.Services
             {
                 if (!vacation.IsApproved)
                 {
+                    var vacationStatus = _db.VacationStatus.FirstOrDefault(x => x.Id == (int)Helper.Helper.VacationStatus.Rejected);
                     vacation.IsRejected = true;
+                    vacation.VacationStatus = vacationStatus;
                     await _db.SaveChangesAsync();
                     return 1;
                 }

@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 
 namespace appointments.Models
 {
     public class Vacation
     {
+        [Key]
         public int Id { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
@@ -17,5 +16,6 @@ namespace appointments.Models
         public bool IsApproved { get; set; }
         public bool IsRejected { get; set; }
         public string AdminId { get; set; }
+        public VacationStatus VacationStatus { get; set; }
     }
 }

@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using appointments.Data;
 
 namespace appointments.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20211017175713_AddVacationStatusProperty")]
+    partial class AddVacationStatusProperty
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -252,12 +254,10 @@ namespace appointments.Data.Migrations
                     b.Property<string>("Title")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("VacationStatusId")
+                    b.Property<int>("VacationStatusId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("VacationStatusId");
 
                     b.ToTable("Vacations");
                 });
@@ -348,15 +348,6 @@ namespace appointments.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("appointments.Models.Vacation", b =>
-                {
-                    b.HasOne("vacations.Models.VacationStatus", "VacationStatus")
-                        .WithMany()
-                        .HasForeignKey("VacationStatusId");
-
-                    b.Navigation("VacationStatus");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,4 +1,4 @@
-﻿namespace vacations.Models
+﻿namespace appointments.Models
 {
     public class VacationStatus
     {

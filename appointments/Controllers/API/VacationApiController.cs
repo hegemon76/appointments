@@ -1,7 +1,6 @@
 ﻿using appointments.Models.ViewModels;
 using appointments.Services;
 using Microsoft.AspNetCore.Http;
-using appointments.Helper;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;

@@ -14,6 +14,6 @@
         public string AdminId { get; set; }
         public string AdminName { get; set; }
         public bool IsForClient { get; set; }
-        public int StatusId { get; set; }
+        public string StatusText { get; set; }
     }
 }

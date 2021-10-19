@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using appointments.Models;
-using vacations.Models;
 using System.IO;
 using System.Collections.Generic;
 using Newtonsoft.Json;
