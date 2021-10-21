@@ -25,14 +25,14 @@
                     </div>
                     @if (User.IsInRole(Helper.AppWorker))
                     {
-                        <div class="form-group">
+                        <div class="form-group row col-12">
                             <label hidden for="lblWorkerName">Pracownik: </label>
                             <label hidden>@ViewBag.CurrentUser.Name</label>
                         </div>
                     }
                     else
                     {
-                        <div class="form-group">
+                        <div class="form-group row col-12">
                             <label for="title">Wybierz pracownika</label>
                             <select id="workerId" asp-items="@(new SelectList(ViewBag.WorkerList,"Id", "Name"))"
                                     class="form-control"></select>
@@ -59,26 +59,27 @@
                     <input type="hidden" id="id" />
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" id="btnClose" onclick="onCloseModal();">Zamknij</button> &nbsp;
-                    @if (User.IsInRole(appointments.Helper.Helper.Admin))
-                    {
-                        <button type="button" class="btn btn-primary" id="btnSend" onclick="onSubmitForm();">Wyślij</button>
-                        <button type="button" class="btn btn-primary" id="btnConfirm" onclick="onConfirmEvent();">Zaakceptuj</button>
-                        <button type="button" class="btn btn-danger" id="btnReject" onclick="onRejectEvent();">Odrzuć</button>
-                        <button type="button" id="btnDelete" class="btn btn-danger hidden"
-                                onclick="onDeleteEvent();">
-                            Usuń
-                        </button>
-
-                    }
-                    @if (User.IsInRole(appointments.Helper.Helper.AppWorker))
-                    {
-                        <button type="button" class="btn btn-primary" id="btnSend" onclick="onSubmitForm();">Wyślij</button>
-                        <button type="button" class="btn btn-danger" id="btnDelete" hidden"
-                                onclick="onDeleteEvent();">
-                            Usuń
-                        </button>
-                    }
+                    <div class="btn-group btn-block">
+                        <button type="button" class="btn btn-secondary" id="btnClose" onclick="onCloseModal();">Zamknij</button> &nbsp;
+                        @if (User.IsInRole(appointments.Helper.Helper.Admin))
+                        {
+                            <button type="button" class="btn btn-primary" id="btnSend" onclick="onSubmitForm();">Wyślij</button>
+                            <button type="button" class="btn btn-primary" id="btnConfirm" onclick="onConfirmEvent();">Zaakceptuj</button>
+                            <button type="button" class="btn btn-danger" id="btnReject" onclick="onRejectEvent();">Odrzuć</button>
+                            <button type="button" id="btnDelete" class="btn btn-danger hidden"
+                                    onclick="onDeleteEvent();">
+                                Usuń
+                            </button>
+                        }
+                        @if (User.IsInRole(appointments.Helper.Helper.AppWorker))
+                        {
+                            <button type="button" class="btn btn-primary" id="btnSend" onclick="onSubmitForm();">Wyślij</button>
+                            <button type="button" class="btn btn-danger" id="btnDelete" hidden"
+                                    onclick="onDeleteEvent();">
+                                Usuń
+                            </button>
+                        }
+                    </div>
                 </div>
             </form>
         </div>

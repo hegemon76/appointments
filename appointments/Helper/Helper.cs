@@ -13,6 +13,7 @@ namespace appointments.Helper
             ContactRequired = 4
         }
 
+
         public static string Admin = "Admin";
         public static string AppWorker = "AppWorker";
         public static string vacationAdded = "Urlop dodany poprawnie.";
@@ -23,6 +24,9 @@ namespace appointments.Helper
         public static string somethingWentWrong = "Ups. Cos poszło nie tak.";
         public static string vacationConfirmed = "Urlop zatwierdzony.";
         public static string operationNotAllowed = "Operacja nie jest dozwolona.";
+        public static string overlapDates = "W wybranym okresie istnieje już urlop.";
+        public static string minimumDate = "Wybrana data musi być minimum dzisiejsza.";
+
         public static int success_code = 1;
         public static int failure_code = 0;
 

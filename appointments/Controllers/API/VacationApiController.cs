@@ -36,6 +36,10 @@ namespace appointments.Controllers.API
                     data.AppWorkerId = loginUserId;
 
                 commonResponse.status = _vacationService.AddUpdate(data).Result;
+
+                if (commonResponse.status == 0)
+                    commonResponse.message = Helper.Helper.overlapDates;
+
                 if (commonResponse.status == 1)
                     commonResponse.message = Helper.Helper.vacationUpdated;
 
@@ -44,6 +48,9 @@ namespace appointments.Controllers.API
 
                 if (commonResponse.status == 3)
                     commonResponse.message = Helper.Helper.operationNotAllowed;
+
+                if (commonResponse.status == 4)
+                    commonResponse.message = Helper.Helper.minimumDate;
             }
             catch (Exception e)
             {

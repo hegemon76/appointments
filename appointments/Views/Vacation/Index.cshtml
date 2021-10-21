@@ -4,7 +4,7 @@
     <div class="container">
         @if (User.IsInRole(Helper.Admin))
         {
-            <div class="form-group row col-2" id="divAppWorkerList">
+            <div class="form-group row col-6" id="divAppWorkerList">
                 <label>Wybierz pracownika</label>
                 @Html.DropDownList("appWorkerId", new SelectList(ViewBag.WorkerList, "Id", "Name"),
                new
@@ -16,7 +16,7 @@
         }
         else
         {
-            <div class="form-group row col-2" id="divAppWorkerList">
+            <div class="form-group row col-6" id="divAppWorkerList">
                 <label>Pracownik</label>
                 <label>@ViewBag.CurrentUser.Name</label>
                 <input type="text" hidden id="appWorkerId" value="@ViewBag.CurrentUser.Id" />

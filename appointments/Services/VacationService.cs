@@ -49,6 +49,12 @@ namespace appointments.Services
             }
             else
             {
+                if (isOverlapWithOtherEvent(model.AppWorkerId, model.StartDate, model.EndDate))
+                    return 0;
+
+                if (!isMinimumDateToday(model.StartDate))
+                    return 4;
+
                 VacationStatus vacationStatus = _db.VacationStatus
                                                 .FirstOrDefault(x => x.Id == (int)Helper.Helper.VacationStatus.Pending);
                 //create
@@ -121,18 +127,18 @@ namespace appointments.Services
         {
             return _db.Vacations.Include(x => x.VacationStatus)
                 .Where(x => x.Id == id).ToList().Select(c => new VacationViewModel()
-            {
-                Id = c.Id,
-                Description = c.Description,
-                StartDate = c.StartDate.ToString("yyyy-MM,dd"),
-                EndDate = c.EndDate.ToString("yyyy-MM,dd"),
-                Title = c.Title,
-                Duration = c.Duration,
-                IsApproved = c.IsApproved,
-                IsRejected = c.IsRejected,
-                AppWorkerId = c.AppWorkerId,
-                StatusText = c.VacationStatus.StatusText
-            }).SingleOrDefault();
+                {
+                    Id = c.Id,
+                    Description = c.Description,
+                    StartDate = c.StartDate.ToString("yyyy-MM,dd"),
+                    EndDate = c.EndDate.ToString("yyyy-MM,dd"),
+                    Title = c.Title,
+                    Duration = c.Duration,
+                    IsApproved = c.IsApproved,
+                    IsRejected = c.IsRejected,
+                    AppWorkerId = c.AppWorkerId,
+                    StatusText = c.VacationStatus.StatusText
+                }).SingleOrDefault();
         }
 
         public async Task<int> DeleteEvent(int id)
@@ -175,6 +181,30 @@ namespace appointments.Services
                 return 4;
             }
             return 0;
+        }
+
+        private bool isOverlapWithOtherEvent(string workerId, string startDate, string endDate)
+        {
+            DateTime _startDate = Convert.ToDateTime(startDate);
+            DateTime _endDate = Convert.ToDateTime(endDate);
+
+            Vacation isEventOverlap = _db.Vacations.Where(x => x.AppWorkerId == workerId)
+                .Where(x => x.StartDate >= _startDate && x.EndDate <= _endDate).FirstOrDefault();
+            
+                if (isEventOverlap == null)
+                return false;
+            else
+                return true;
+        }
+
+        private bool isMinimumDateToday(string startDate)
+        {
+            DateTime _startDate = Convert.ToDateTime(startDate).Date;
+            DateTime now = DateTime.Now.Date;
+            if (_startDate < now)
+                return false;
+
+            return true;
         }
     }
 

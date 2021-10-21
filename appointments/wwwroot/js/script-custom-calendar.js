@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 initialView: 'dayGridMonth',
                 firstDay: 1,
                 locale: 'pl',
-                aspectRatio: 2.5,
+               
                 buttonText: {
                     month: 'Miesiąc',
                     today: 'Dzisiaj'

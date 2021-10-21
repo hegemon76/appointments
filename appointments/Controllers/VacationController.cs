@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using appointments.Helper;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Authorization;
 
 namespace appointments.Controllers
 {
@@ -12,6 +13,7 @@ namespace appointments.Controllers
         {
             _appointmentService = appointmentService;
         }
+        [Authorize]
         public IActionResult Index()
         {
             if (User.IsInRole(Helper.Helper.Admin))
