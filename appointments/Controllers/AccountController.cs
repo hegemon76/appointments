@@ -1,6 +1,5 @@
 ﻿using appointments.Data;
 using appointments.Models;
-using appointments.Helper;
 using appointments.Models.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -46,11 +45,6 @@ namespace appointments.Controllers
 
         public async Task<IActionResult> Register()
         {
-            if (!_roleManager.RoleExistsAsync(Helper.Helper.Admin).GetAwaiter().GetResult())
-            {
-                await _roleManager.CreateAsync(new IdentityRole(Helper.Helper.Admin));
-                await _roleManager.CreateAsync(new IdentityRole(Helper.Helper.AppWorker));
-            }
             return View();
         }
 

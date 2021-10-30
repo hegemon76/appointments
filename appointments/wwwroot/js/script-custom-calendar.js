@@ -126,7 +126,7 @@ function onSubmitForm() {
             data: JSON.stringify(requestData),
             contentType: 'application/json',
             success: function (response) {
-                if (response.status === 1 || response.status === 2) {
+                if (!isNaN(response.status) && response.status > 0) {
                     calendar.refetchEvents();
                     $.notify(response.message, "success");
                     onCloseModal();
@@ -149,7 +149,7 @@ function onDeleteEvent() {
         type: 'GET',
         dataType: 'JSON',
         success: function (response) {
-            if (response.status === 1) {
+            if (!isNaN(response.status) && response.status > 0) {
                 calendar.refetchEvents();
                 $.notify(response.message, 'success');
                 onCloseModal();
@@ -171,7 +171,7 @@ function onConfirmEvent() {
         type: 'GET',
         dataType: 'JSON',
         success: function (response) {
-            if (response.status === 1) {
+            if (!isNaN(response.status) && response.status > 0) {
                 $.notify(response.message, 'success');
                 calendar.refetchEvents();
                 onCloseModal();
@@ -193,7 +193,7 @@ function onRejectEvent() {
         type: 'GET',
         dataType: 'JSON',
         success: function (response) {
-            if (response.status === 1) {
+            if (!isNaN(response.status) && response.status > 0) {
                 $.notify(response.message, 'success');
                 calendar.refetchEvents();
                 onCloseModal();
@@ -215,7 +215,7 @@ function getEventDetailsByEventId(info) {
         dataType: 'JSON',
         success: function (response) {
 
-            if (response.status === 1 && response.dataenum != undefined) {
+            if (!isNaN(response.status) && response.status > 0 && response.dataenum != undefined) {
                 onShowModal(response.dataenum, true);
             }
             //successCallback(events);
@@ -234,7 +234,7 @@ function GetCalendarData(successCallback) {
         dataType: 'JSON',
         success: function (response) {
             var events = [];
-            if (response.status === 1) {
+            if (!isNaN(response.status) && response.status > 0) {
                 $.each(response.dataenum, function (i, data) {
                     //workaround becouse end date was exclusively so we have to add 1 day
                     var endDate = moment(data.endDate).add(1, 'day').format("YYYY-MM-DD");

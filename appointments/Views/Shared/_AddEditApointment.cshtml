@@ -1,11 +1,12 @@
 ﻿@using appointments.Helper;
+@using vacations.Models.Helper;
 
 <div class="modal fade" role="dialog" id="appointmentInput" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog">
         <div class="modal-content">
             <form id="appointmentForm" autocomplete="off" novalidate="novalidate">
                 <div class="modal-header">
-                    @if (User.IsInRole(Helper.Admin))
+                    @if (User.IsInRole(RoleNames.Role_Admin))
                     {
                         <h4 class="modal-title">Dodaj/Edytuj urlop</h4>
                     }
@@ -23,7 +24,7 @@
                         <label for="description">Opis</label>
                         <input type="text" class="form-control" id="description" />
                     </div>
-                    @if (User.IsInRole(Helper.AppWorker))
+                    @if (User.IsInRole(RoleNames.Role_AppWorker))
                     {
                         <div class="form-group row col-12">
                             <label hidden for="lblWorkerName">Pracownik: </label>
@@ -61,7 +62,7 @@
                 <div class="modal-footer">
                     <div class="btn-group btn-block">
                         <button type="button" class="btn btn-secondary" id="btnClose" onclick="onCloseModal();">Zamknij</button> &nbsp;
-                        @if (User.IsInRole(appointments.Helper.Helper.Admin))
+                        @if (User.IsInRole(RoleNames.Role_Admin))
                         {
                             <button type="button" class="btn btn-primary" id="btnSend" onclick="onSubmitForm();">Wyślij</button>
                             <button type="button" class="btn btn-primary" id="btnConfirm" onclick="onConfirmEvent();">Zaakceptuj</button>
@@ -71,7 +72,7 @@
                                 Usuń
                             </button>
                         }
-                        @if (User.IsInRole(appointments.Helper.Helper.AppWorker))
+                        @if (User.IsInRole(RoleNames.Role_AppWorker))
                         {
                             <button type="button" class="btn btn-primary" id="btnSend" onclick="onSubmitForm();">Wyślij</button>
                             <button type="button" class="btn btn-danger" id="btnDelete" hidden"

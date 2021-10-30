@@ -6,9 +6,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using vacations.Models.Enums;
+using vacations.Models.Helper;
 
 namespace appointments.Services
 {
@@ -43,20 +44,20 @@ namespace appointments.Services
                     vacation.AppWorkerId = model.AppWorkerId;
                     vacation.AdminId = model.AdminId;
                     await _db.SaveChangesAsync();
-                    return 1;
+                    return (int)EnumStatusMessage.VacationUpdated;
                 }
-                return 3;
+                return (int)EnumStatusMessage.OperationNotAllowed;
             }
             else
             {
                 if (isOverlapWithOtherEvent(model.AppWorkerId, model.StartDate, model.EndDate))
-                    return 0;
+                    return (int)EnumStatusMessage.OverlapDates;
 
                 if (!isMinimumDateToday(model.StartDate))
-                    return 4;
+                    return (int)EnumStatusMessage.MinimumDate;
 
                 VacationStatus vacationStatus = _db.VacationStatus
-                                                .FirstOrDefault(x => x.Id == (int)Helper.Helper.VacationStatus.Pending);
+                                                .FirstOrDefault(x => x.Id == (int)EnumVacationStatus.Pending);
                 //create
                 Vacation vacation = new Vacation()
                 {
@@ -74,7 +75,7 @@ namespace appointments.Services
 
                 _db.Vacations.Add(vacation);
                 await _db.SaveChangesAsync();
-                return 2;
+                return (int)EnumStatusMessage.VacationAdded;
             }
         }
 
@@ -82,7 +83,7 @@ namespace appointments.Services
         {
             var workers = (from user in _db.Users
                            join userRoles in _db.UserRoles on user.Id equals userRoles.UserId
-                           join roles in _db.Roles.Where(x => x.Name == Helper.Helper.AppWorker) on userRoles.RoleId equals roles.Id
+                           join roles in _db.Roles.Where(x => x.Name == RoleNames.Role_AppWorker) on userRoles.RoleId equals roles.Id
                            select new AppWorkerViewModel
                            {
                                Id = user.Id,
@@ -147,9 +148,10 @@ namespace appointments.Services
             if (vacation != null)
             {
                 _db.Vacations.Remove(vacation);
-                return await _db.SaveChangesAsync();
+                await _db.SaveChangesAsync();
+                return (int)EnumStatusMessage.VacationDeleted;
             }
-            return 0;
+            return (int)EnumStatusMessage.failure_code;
         }
 
         public async Task<int> ConfirmEvent(int id)
@@ -157,12 +159,13 @@ namespace appointments.Services
             var vacation = _db.Vacations.FirstOrDefault(x => x.Id == id);
             if (vacation != null)
             {
-                var vacationStatus = _db.VacationStatus.FirstOrDefault(x => x.Id == (int)Helper.Helper.VacationStatus.Accepted);
+                var vacationStatus = _db.VacationStatus.FirstOrDefault(x => x.Id == (int)EnumVacationStatus.Accepted);
                 vacation.IsApproved = true;
                 vacation.VacationStatus = vacationStatus;
-                return await _db.SaveChangesAsync();
+                await _db.SaveChangesAsync();
+                return (int)EnumStatusMessage.VacationConfirmed;
             }
-            return 0;
+            return (int)EnumStatusMessage.failure_code;
         }
 
         public async Task<int> RejectEvent(int id)
@@ -172,15 +175,15 @@ namespace appointments.Services
             {
                 if (!vacation.IsApproved)
                 {
-                    var vacationStatus = _db.VacationStatus.FirstOrDefault(x => x.Id == (int)Helper.Helper.VacationStatus.Rejected);
+                    var vacationStatus = _db.VacationStatus.FirstOrDefault(x => x.Id == (int)EnumVacationStatus.Rejected);
                     vacation.IsRejected = true;
                     vacation.VacationStatus = vacationStatus;
                     await _db.SaveChangesAsync();
-                    return 1;
+                    return (int)EnumStatusMessage.VacationRejected;
                 }
-                return 4;
+                return (int)EnumStatusMessage.OperationNotAllowed;
             }
-            return 0;
+            return (int)EnumStatusMessage.failure_code;
         }
 
         private bool isOverlapWithOtherEvent(string workerId, string startDate, string endDate)

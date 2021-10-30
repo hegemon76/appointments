@@ -1,8 +1,9 @@
 ﻿@using appointments.Helper;
+@using vacations.Models.Helper
 
 <div class="row">
     <div class="container">
-        @if (User.IsInRole(Helper.Admin))
+        @if (User.IsInRole(RoleNames.Role_Admin))
         {
             <div class="form-group row col-6" id="divAppWorkerList">
                 <label>Wybierz pracownika</label>

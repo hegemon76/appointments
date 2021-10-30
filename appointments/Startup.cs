@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using vacations.Models.Helper;
 
 namespace appointments
 {
@@ -30,6 +31,7 @@ namespace appointments
             services.AddDatabaseDeveloperPageExceptionFilter();
 
             services.AddTransient<IVacationService, VacationService>();
+            services.AddTransient<StatusMessageHelper>();
 
             services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
 

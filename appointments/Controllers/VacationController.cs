@@ -1,8 +1,7 @@
 ﻿using appointments.Services;
 using Microsoft.AspNetCore.Mvc;
-using appointments.Helper;
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Authorization;
+using vacations.Models.Helper;
 
 namespace appointments.Controllers
 {
@@ -13,10 +12,12 @@ namespace appointments.Controllers
         {
             _appointmentService = appointmentService;
         }
+
         [Authorize]
+        //[Authorize(Roles = "AppWorker")]
         public IActionResult Index()
         {
-            if (User.IsInRole(Helper.Helper.Admin))
+            if (User.IsInRole(RoleNames.Role_Admin))
             {
                 ViewBag.WorkerList = _appointmentService.GetWorkerList();
             }
