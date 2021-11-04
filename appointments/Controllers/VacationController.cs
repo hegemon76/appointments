@@ -13,8 +13,7 @@ namespace appointments.Controllers
             _appointmentService = appointmentService;
         }
 
-        [Authorize]
-        //[Authorize(Roles = "AppWorker")]
+        [Authorize(Roles = "Admin, AppWorker")]
         public IActionResult Index()
         {
             if (User.IsInRole(RoleNames.Role_Admin))

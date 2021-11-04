@@ -28,6 +28,7 @@ namespace appointments.Services
         {
             var startDate = DateTime.Parse(model.StartDate);
             var endDate = DateTime.Parse(model.EndDate);
+            var user = _db.Users.FirstOrDefault(x => x.Id == model.AppWorkerId);
 
             if (model != null && model.Id > 0)
             {
@@ -39,10 +40,18 @@ namespace appointments.Services
                     vacation.Description = model.Description;
                     vacation.StartDate = startDate;
                     vacation.EndDate = endDate;
+
+                    user.VacationDays += vacation.Duration;
+                    user.VacationDaysTaken -= vacation.Duration;
                     vacation.Duration = model.Duration;
+                    user.VacationDays -= model.Duration;
+                    user.VacationDaysTaken += vacation.Duration;
+
                     vacation.IsApproved = model.IsApproved;
                     vacation.AppWorkerId = model.AppWorkerId;
                     vacation.AdminId = model.AdminId;
+
+
                     await _db.SaveChangesAsync();
                     return (int)EnumStatusMessage.VacationUpdated;
                 }
@@ -73,6 +82,9 @@ namespace appointments.Services
                     VacationStatus = vacationStatus
                 };
 
+                user.VacationDays -= model.Duration;
+                user.VacationDaysTaken += vacation.Duration;
+
                 _db.Vacations.Add(vacation);
                 await _db.SaveChangesAsync();
                 return (int)EnumStatusMessage.VacationAdded;
@@ -87,7 +99,9 @@ namespace appointments.Services
                            select new AppWorkerViewModel
                            {
                                Id = user.Id,
-                               Name = user.Name
+                               Name = user.Name,
+                               VacationDays = user.VacationDays,
+                               VacationDaysTaken = user.VacationDaysTaken
                            }
                           ).ToList();
 
@@ -105,12 +119,13 @@ namespace appointments.Services
             return model;
         }
 
-        public List<VacationViewModel> VacationsEventById(string workerId)
+        public List<VacationViewModel> VacationsEventById(string workerId, int month)
         {
             if (workerId == null)
                 workerId = GetCurrentUser().Id;
             return _db.Vacations.Include(x => x.VacationStatus)
-                .Where(x => x.AppWorkerId == workerId).ToList().Select(c => new VacationViewModel()
+                .Where(x => x.AppWorkerId == workerId && x.StartDate.Month == month)
+                .ToList().Select(c => new VacationViewModel()
                 {
                     Id = c.Id,
                     Description = c.Description,
@@ -145,8 +160,13 @@ namespace appointments.Services
         public async Task<int> DeleteEvent(int id)
         {
             var vacation = _db.Vacations.FirstOrDefault(x => x.Id == id);
+
             if (vacation != null)
             {
+                var user = _db.Users.FirstOrDefault(x => x.Id == vacation.AppWorkerId);
+                user.VacationDays += vacation.Duration;
+                user.VacationDaysTaken -= vacation.Duration;
+
                 _db.Vacations.Remove(vacation);
                 await _db.SaveChangesAsync();
                 return (int)EnumStatusMessage.VacationDeleted;
@@ -175,6 +195,10 @@ namespace appointments.Services
             {
                 if (!vacation.IsApproved)
                 {
+                    var user = _db.Users.FirstOrDefault(x => x.Id == vacation.AppWorkerId);
+                    user.VacationDays += vacation.Duration;
+                    user.VacationDaysTaken -= vacation.Duration;
+
                     var vacationStatus = _db.VacationStatus.FirstOrDefault(x => x.Id == (int)EnumVacationStatus.Rejected);
                     vacation.IsRejected = true;
                     vacation.VacationStatus = vacationStatus;
@@ -191,10 +215,11 @@ namespace appointments.Services
             DateTime _startDate = Convert.ToDateTime(startDate);
             DateTime _endDate = Convert.ToDateTime(endDate);
 
-            Vacation isEventOverlap = _db.Vacations.Where(x => x.AppWorkerId == workerId)
+            Vacation isEventOverlap = _db.Vacations
+                .Where(x => x.AppWorkerId == workerId)
                 .Where(x => x.StartDate >= _startDate && x.EndDate <= _endDate).FirstOrDefault();
-            
-                if (isEventOverlap == null)
+
+            if (isEventOverlap == null)
                 return false;
             else
                 return true;

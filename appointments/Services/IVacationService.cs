@@ -10,7 +10,7 @@ namespace appointments.Services
         public List<AppWorkerViewModel> GetWorkerList();
         public AppWorkerViewModel GetCurrentUser();
         public Task<int> AddUpdate(VacationViewModel model);
-        public List<VacationViewModel> VacationsEventById(string workerId);
+        public List<VacationViewModel> VacationsEventById(string workerId, int month);
         public VacationViewModel GetById(int id);
         public Task<int> DeleteEvent(int id);
         public Task<int> ConfirmEvent(int id);
