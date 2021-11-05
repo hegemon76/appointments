@@ -2,15 +2,21 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using vacations.Models.Helper;
+using Microsoft.AspNetCore.Http;
+using System.Linq;
+using System.Security.Claims;
+using appointments.Models.ViewModels;
 
 namespace appointments.Controllers
 {
     public class VacationController : Controller
     {
-        private readonly IVacationService _appointmentService;
-        public VacationController(IVacationService appointmentService)
+        private readonly IVacationService _vacationService;
+        private readonly IHttpContextAccessor _context;
+        public VacationController(IVacationService vacationService, IHttpContextAccessor context)
         {
-            _appointmentService = appointmentService;
+            _vacationService = vacationService;
+            _context = context;
         }
 
         [Authorize]
@@ -19,11 +25,18 @@ namespace appointments.Controllers
         {
             if (User.IsInRole(RoleNames.Role_Admin))
             {
-                ViewBag.WorkerList = _appointmentService.GetWorkerList();
+                ViewBag.WorkerList = _vacationService.GetWorkerList();
             }
             else
             {
-                ViewBag.CurrentUser = _appointmentService.GetCurrentUser();
+                AppWorkerViewModel currentUser = new AppWorkerViewModel
+                {
+                    Id = _context.HttpContext.User.Claims
+                    .First(x => x.Type == ClaimTypes.NameIdentifier).Value,
+                    Name = _context.HttpContext.User.Claims
+                    .First(x => x.Type == ClaimTypes.Name).Value
+                };
+                ViewBag.CurrentUser = currentUser;
             }
             return View();
         }

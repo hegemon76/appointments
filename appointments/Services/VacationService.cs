@@ -83,7 +83,8 @@ namespace appointments.Services
         {
             var workers = (from user in _db.Users
                            join userRoles in _db.UserRoles on user.Id equals userRoles.UserId
-                           join roles in _db.Roles.Where(x => x.Name == RoleNames.Role_AppWorker) on userRoles.RoleId equals roles.Id
+                           join roles in _db.Roles.Where(x => x.Name == RoleNames.Role_AppWorker) 
+                           on userRoles.RoleId equals roles.Id
                            select new AppWorkerViewModel
                            {
                                Id = user.Id,
@@ -94,21 +95,10 @@ namespace appointments.Services
             return workers;
         }
 
-        public AppWorkerViewModel GetCurrentUser()
-        {
-            var currentLogin = _context.HttpContext.User.Claims.ToList();
-            AppWorkerViewModel model = new AppWorkerViewModel()
-            {
-                Name = currentLogin.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value,
-                Id = currentLogin.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value
-            };
-            return model;
-        }
-
         public List<VacationViewModel> VacationsEventById(string workerId)
         {
             if (workerId == null)
-                workerId = GetCurrentUser().Id;
+                workerId = _context.HttpContext.User.Claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value;
             return _db.Vacations.Include(x => x.VacationStatus)
                 .Where(x => x.AppWorkerId == workerId).ToList().Select(c => new VacationViewModel()
                 {
@@ -159,7 +149,8 @@ namespace appointments.Services
             var vacation = _db.Vacations.FirstOrDefault(x => x.Id == id);
             if (vacation != null)
             {
-                var vacationStatus = _db.VacationStatus.FirstOrDefault(x => x.Id == (int)EnumVacationStatus.Accepted);
+                var vacationStatus = _db.VacationStatus
+                    .FirstOrDefault(x => x.Id == (int)EnumVacationStatus.Accepted);
                 vacation.IsApproved = true;
                 vacation.VacationStatus = vacationStatus;
                 await _db.SaveChangesAsync();
@@ -175,7 +166,8 @@ namespace appointments.Services
             {
                 if (!vacation.IsApproved)
                 {
-                    var vacationStatus = _db.VacationStatus.FirstOrDefault(x => x.Id == (int)EnumVacationStatus.Rejected);
+                    var vacationStatus = _db.VacationStatus
+                        .FirstOrDefault(x => x.Id == (int)EnumVacationStatus.Rejected);
                     vacation.IsRejected = true;
                     vacation.VacationStatus = vacationStatus;
                     await _db.SaveChangesAsync();
