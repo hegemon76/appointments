@@ -95,6 +95,17 @@ namespace appointments.Services
             return workers;
         }
 
+        public AppWorkerViewModel GetCurrentUser()
+        {
+            var currentLogin = _context.HttpContext.User.Claims.ToList();
+            AppWorkerViewModel model = new AppWorkerViewModel()
+            {
+                Name = currentLogin.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value,
+                Id = currentLogin.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value
+            };
+            return model;
+        }
+
         public List<VacationViewModel> VacationsEventById(string workerId)
         {
             if (workerId == null)
@@ -166,8 +177,7 @@ namespace appointments.Services
             {
                 if (!vacation.IsApproved)
                 {
-                    var vacationStatus = _db.VacationStatus
-                        .FirstOrDefault(x => x.Id == (int)EnumVacationStatus.Rejected);
+                    var vacationStatus = _db.VacationStatus.FirstOrDefault(x => x.Id == (int)EnumVacationStatus.Rejected);
                     vacation.IsRejected = true;
                     vacation.VacationStatus = vacationStatus;
                     await _db.SaveChangesAsync();

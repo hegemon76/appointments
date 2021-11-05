@@ -19,6 +19,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     center: 'title',
                     right: 'dayGridMonth'
                 },
+                showNonCurrentDates: false,
+                fixedWeekCount: false,
                 selectable: true,
                 editable: false,
                 select: function (event) {
@@ -26,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 eventDisplay: 'block',
                 events: function (fetchInfo, successCallback, failureCallback) {
-                    GetCalendarData(successCallback);
+                    GetCalendarData(successCallback, fetchInfo);
                 },
                 eventClick: function (info) {
                     getEventDetailsByEventId(info.event);
@@ -226,10 +228,10 @@ function getEventDetailsByEventId(info) {
     });
 }
 
-function GetCalendarData(successCallback) {
-
+function GetCalendarData(successCallback, fetchInfo) {
+    var monthDt = new moment(fetchInfo.startStr).format("M");
     $.ajax({
-        url: routeURL + '/api/Vacation/GetCalendarData?workerId=' + $("#appWorkerId").val(),
+        url: routeURL + '/api/Vacation/GetCalendarData?workerId=' + $("#appWorkerId").val() + "&month=" + monthDt,
         type: 'GET',
         dataType: 'JSON',
         success: function (response) {

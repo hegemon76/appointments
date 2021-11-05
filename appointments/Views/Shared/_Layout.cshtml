@@ -1,4 +1,6 @@
-﻿<!DOCTYPE html>
+﻿@inject Microsoft.AspNetCore.Identity.SignInManager<ApplicationUser> signInManager;
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -15,6 +17,11 @@
 <body>
     <header>
         <nav class="navbar navbar-inverse navbar-expand-sm navbar-toggleable-sm navbar box-shadow mb-3">
+            <a class="nav-link text-white" id="registerLink" asp-controller="Home" asp-action="Index">Strona domowa</a>
+            @if (signInManager.IsSignedIn(User))
+            {
+                <a class="nav-link text-white" id="registerLink" asp-controller="Vacation" asp-action="Index">Urlopy</a>
+            }
             <div class="container">
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
@@ -34,7 +41,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2021 - appointments - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2021 - Urlopy - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

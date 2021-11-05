@@ -1,5 +1,4 @@
-﻿using appointments.Data;
-using appointments.Models;
+﻿using appointments.Models;
 using appointments.Models.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -9,18 +8,14 @@ namespace appointments.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly ApplicationDbContext _db;
-        UserManager<ApplicationUser> _userManager;
-        SignInManager<ApplicationUser> _signInManager;
-        RoleManager<IdentityRole> _roleManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
 
-        public AccountController(ApplicationDbContext db, UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager, RoleManager<IdentityRole> roleManager)
+        public AccountController(UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager)
         {
-            _db = db;
             _userManager = userManager;
             _signInManager = signInManager;
-            _roleManager = roleManager;
         }
         public IActionResult Login()
         {
@@ -33,7 +28,7 @@ namespace appointments.Controllers
         {
             if (ModelState.IsValid)
             {
-                var result = await _signInManager.PasswordSignInAsync(model.Email,model.Password, model.RememberMe, false);
+                var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, false);
                 if (result.Succeeded)
                 {
                     return RedirectToAction("Index", "Vacation");
@@ -58,7 +53,9 @@ namespace appointments.Controllers
                 {
                     UserName = model.Email,
                     Email = model.Email,
-                    Name = model.Name
+                    Name = model.Name,
+                    VacationDays = 26,
+                    VacationDaysTaken = 0
                 };
 
                 var result = await _userManager.CreateAsync(user, model.Password);
@@ -82,7 +79,7 @@ namespace appointments.Controllers
         {
             await _signInManager.SignOutAsync();
             return RedirectToAction("Login", "Account");
-            
+
         }
     }
 }

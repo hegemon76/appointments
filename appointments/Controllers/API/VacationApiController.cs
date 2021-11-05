@@ -54,19 +54,19 @@ namespace appointments.Controllers.API
 
         [HttpGet]
         [Route("GetCalendarData")]
-        public IActionResult GetCalendarData(string workerId)
+        public IActionResult GetCalendarData(string workerId, int month)
         {
             CommonResponse<List<VacationViewModel>> commonResponse = new CommonResponse<List<VacationViewModel>>();
             try
             {
                 if (role == RoleNames.Role_AppWorker)
                 {
-                    commonResponse.dataenum = _vacationService.VacationsEventById(loginUserId);
+                    commonResponse.dataenum = _vacationService.VacationsEventById(loginUserId, month);
                     commonResponse.status = (int)EnumStatusMessage.success_code;
                 }
                 else
                 {
-                    commonResponse.dataenum = _vacationService.VacationsEventById(workerId);
+                    commonResponse.dataenum = _vacationService.VacationsEventById(workerId, month);
                     commonResponse.status = (int)EnumStatusMessage.success_code;
                 }
             }
