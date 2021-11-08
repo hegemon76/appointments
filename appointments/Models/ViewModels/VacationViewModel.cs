@@ -15,5 +15,6 @@
         public string AdminName { get; set; }
         public bool IsForClient { get; set; }
         public string StatusText { get; set; }
+        public int DaysTakenInMonth { get; set; }
     }
 }

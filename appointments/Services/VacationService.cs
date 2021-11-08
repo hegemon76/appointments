@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using vacations.Models.Enums;
 using vacations.Models.Helper;
+using Microsoft.AspNetCore.Identity;
 
 namespace appointments.Services
 {
@@ -17,73 +18,87 @@ namespace appointments.Services
     {
         private readonly ApplicationDbContext _db;
         private readonly IHttpContextAccessor _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public VacationService(ApplicationDbContext db, IHttpContextAccessor context)
+        public VacationService(ApplicationDbContext db, IHttpContextAccessor context, UserManager<ApplicationUser> userManager)
         {
             _db = db;
             _context = context;
+            _userManager = userManager;
         }
 
         public async Task<int> AddUpdate(VacationViewModel model)
         {
-            var startDate = DateTime.Parse(model.StartDate);
-            var endDate = DateTime.Parse(model.EndDate);
-
             if (model != null && model.Id > 0)
             {
-                //update
-                var vacation = _db.Vacations.FirstOrDefault(x => x.Id == model.Id);
-                if (!vacation.IsApproved && !vacation.IsRejected)
-                {
-                    vacation.Title = model.Title;
-                    vacation.Description = model.Description;
-                    vacation.StartDate = startDate;
-                    vacation.EndDate = endDate;
-                    vacation.Duration = model.Duration;
-                    vacation.IsApproved = model.IsApproved;
-                    vacation.AppWorkerId = model.AppWorkerId;
-                    vacation.AdminId = model.AdminId;
-                    await _db.SaveChangesAsync();
-                    return (int)EnumStatusMessage.VacationUpdated;
-                }
-                return (int)EnumStatusMessage.OperationNotAllowed;
+                return await UpdateEvent(model);
             }
             else
             {
-                if (isOverlapWithOtherEvent(model.AppWorkerId, model.StartDate, model.EndDate))
-                    return (int)EnumStatusMessage.OverlapDates;
-
-                if (!isMinimumDateToday(model.StartDate))
-                    return (int)EnumStatusMessage.MinimumDate;
-
-                VacationStatus vacationStatus = _db.VacationStatus
-                                                .FirstOrDefault(x => x.Id == (int)EnumVacationStatus.Pending);
-                //create
-                Vacation vacation = new Vacation()
-                {
-                    Title = model.Title,
-                    Description = model.Description,
-                    StartDate = startDate,
-                    EndDate = endDate,
-                    Duration = model.Duration,
-                    IsApproved = false,
-                    IsRejected = false,
-                    AppWorkerId = model.AppWorkerId,
-                    AdminId = model.AdminId,
-                    VacationStatus = vacationStatus
-                };
-
-                _db.Vacations.Add(vacation);
-                await _db.SaveChangesAsync();
-                return (int)EnumStatusMessage.VacationAdded;
+                return await AddEvent(model);
             }
+        }
+
+        private async Task<int> AddEvent(VacationViewModel model)
+        {
+            if (isOverlapWithOtherEvent(model.AppWorkerId, model.StartDate, model.EndDate))
+                return (int)EnumStatusMessage.OverlapDates;
+
+            if (!isMinimumDateToday(model.StartDate))
+                return (int)EnumStatusMessage.MinimumDate;
+
+            var startDate = DateTime.Parse(model.StartDate);
+            var endDate = DateTime.Parse(model.EndDate);
+
+            VacationStatus vacationStatus = _db.VacationStatus
+                                            .FirstOrDefault(x => x.Id == (int)EnumVacationStatus.Pending);
+            //create
+            Vacation vacation = new Vacation()
+            {
+                Title = model.Title,
+                Description = model.Description,
+                StartDate = startDate,
+                EndDate = endDate,
+                Duration = model.Duration,
+                IsApproved = false,
+                IsRejected = false,
+                AppWorkerId = model.AppWorkerId,
+                AdminId = model.AdminId,
+                VacationStatus = vacationStatus
+            };
+
+            _db.Vacations.Add(vacation);
+            await _db.SaveChangesAsync();
+            return (int)EnumStatusMessage.VacationAdded;
+        }
+
+        private async Task<int> UpdateEvent(VacationViewModel model)
+        {
+            var startDate = DateTime.Parse(model.StartDate);
+            var endDate = DateTime.Parse(model.EndDate);
+            //update
+            var vacation = _db.Vacations.FirstOrDefault(x => x.Id == model.Id);
+            if (!vacation.IsApproved && !vacation.IsRejected)
+            {
+                vacation.Title = model.Title;
+                vacation.Description = model.Description;
+                vacation.StartDate = startDate;
+                vacation.EndDate = endDate;
+                vacation.Duration = model.Duration;
+                vacation.IsApproved = model.IsApproved;
+                vacation.AppWorkerId = model.AppWorkerId;
+                vacation.AdminId = model.AdminId;
+                await _db.SaveChangesAsync();
+                return (int)EnumStatusMessage.VacationUpdated;
+            }
+            return (int)EnumStatusMessage.OperationNotAllowed;
         }
 
         public List<AppWorkerViewModel> GetWorkerList()
         {
             var workers = (from user in _db.Users
                            join userRoles in _db.UserRoles on user.Id equals userRoles.UserId
-                           join roles in _db.Roles.Where(x => x.Name == RoleNames.Role_AppWorker) 
+                           join roles in _db.Roles.Where(x => x.Name == RoleNames.Role_AppWorker)
                            on userRoles.RoleId equals roles.Id
                            select new AppWorkerViewModel
                            {
@@ -98,18 +113,50 @@ namespace appointments.Services
         public AppWorkerViewModel GetCurrentUser()
         {
             var currentLogin = _context.HttpContext.User.Claims.ToList();
+            string userId = _context.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var user = _userManager.GetUserAsync(_context.HttpContext.User);
+
+            int vacs = user.Result.VacationDays;
+
+            //var vacsDays = GetVacationsByMonth(userId, month);
+
             AppWorkerViewModel model = new AppWorkerViewModel()
             {
                 Name = currentLogin.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value,
-                Id = currentLogin.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value
+                Id = currentLogin.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value,
+                VacationDays = vacs
             };
             return model;
         }
+        private int GetVacationsByMonth(string appUserId, int month)
+        {
+            var daysTaken = _db.Vacations.Where(x => x.AppWorkerId == appUserId)
+                .Where(x => x.StartDate.Month == month || x.EndDate.Month == month)
+                .ToList();
+            
+            int daysInMonth = DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month);
+            TimeSpan diffResult;
+            List<DateTime> daysList = new List<DateTime>();
+            foreach (var day in daysTaken)
+            {
+                diffResult = day.EndDate - day.StartDate;
+                for (int i = 0; i < diffResult.Days; i++)
+                {
+                    if (day.StartDate.Day != daysInMonth)
+                        daysList.Add(day.StartDate.AddDays(i));
+                }
+            }
+            return daysList.Count();
+        }
 
-        public List<VacationViewModel> VacationsEventById(string workerId)
+        public List<VacationViewModel> VacationsEventById(string workerId, int month)
         {
             if (workerId == null)
                 workerId = _context.HttpContext.User.Claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value;
+
+            GetVacationsByMonth(workerId, month);
+
             return _db.Vacations.Include(x => x.VacationStatus)
                 .Where(x => x.AppWorkerId == workerId).ToList().Select(c => new VacationViewModel()
                 {
@@ -195,8 +242,8 @@ namespace appointments.Services
 
             Vacation isEventOverlap = _db.Vacations.Where(x => x.AppWorkerId == workerId)
                 .Where(x => x.StartDate >= _startDate && x.EndDate <= _endDate).FirstOrDefault();
-            
-                if (isEventOverlap == null)
+
+            if (isEventOverlap == null)
                 return false;
             else
                 return true;

@@ -25,7 +25,18 @@
         }
         <div class="row">
             <div class="col-2">
-
+                <table class="table table-hover">
+                    <tbody>
+                        <tr>
+                            <th scope="col">Liczba dni urlopowych</th>
+                            <th class="align-middle" scope="col">@ViewBag.CurrentUser.VacationDays</th>
+                        </tr>
+                        <tr>
+                            <th scope="col">Wykorzystano w tym miesiącu</th>
+                            <th class="align-middle" scope="col">@ViewBag.CurrentUser.VacationDays</th>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
             <div class="col-10" id="calendar"></div>
         </div>

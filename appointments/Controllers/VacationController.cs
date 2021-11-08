@@ -28,13 +28,8 @@ namespace appointments.Controllers
             }
             else
             {
-                AppWorkerViewModel currentUser = new AppWorkerViewModel
-                {
-                    Id = _context.HttpContext.User.Claims
-                    .First(x => x.Type == ClaimTypes.NameIdentifier).Value,
-                    Name = _context.HttpContext.User.Claims
-                    .First(x => x.Type == ClaimTypes.Name).Value
-                };
+                var currentUser = _vacationService.GetCurrentUser();
+                
                 ViewBag.CurrentUser = currentUser;
             }
             return View();
