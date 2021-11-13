@@ -106,12 +106,14 @@ namespace appointments.Services
             return model;
         }
 
-        public List<VacationViewModel> VacationsEventById(string workerId)
+        public List<VacationViewModel> VacationsEventById(string workerId, int month)
         {
             if (workerId == null)
                 workerId = _context.HttpContext.User.Claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value;
             return _db.Vacations.Include(x => x.VacationStatus)
-                .Where(x => x.AppWorkerId == workerId).ToList().Select(c => new VacationViewModel()
+                .Where(x => x.AppWorkerId == workerId)
+                .Where(x => x.StartDate.Month == month)
+                .ToList().Select(c => new VacationViewModel()
                 {
                     Id = c.Id,
                     Description = c.Description,
