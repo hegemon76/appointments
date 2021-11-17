@@ -72,8 +72,8 @@ namespace appointments.Services
                 };
 
                 var user = GetCurrentUser();
-                _db.Users.FirstOrDefault(x => x.Id == user.Id).VacationDays -= vacation.Duration;
-
+               _db.Users.FirstOrDefault(x => x.Id == user.Id).VacationDays -= vacation.Duration;
+                _db.Users.Update(x =>   );
                 _db.Vacations.Add(vacation);
                 await _db.SaveChangesAsync();
                 return (int)EnumStatusMessage.VacationAdded;
@@ -131,23 +131,29 @@ namespace appointments.Services
             return workers;
         }
 
-        public AppWorkerViewModel GetCurrentUser()
+        public AppWorkerViewModel GetCurrentUser(string id="")
         {
-            var currentLogin = _context.HttpContext.User.Claims.ToList();
-            string userId = _context.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            var user = _userManager.GetUserAsync(_context.HttpContext.User);
-
-            int vacs = user.Result.VacationDays;
-
-            //var vacsDays = GetVacationsByMonth(userId, month);
-
-            AppWorkerViewModel model = new AppWorkerViewModel()
+            AppWorkerViewModel model = new AppWorkerViewModel();
+            if (string.IsNullOrWhiteSpace(id))
             {
-                Name = currentLogin.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value,
-                Id = currentLogin.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value,
-                VacationDays = vacs
-            };
+                var currentLogin = _context.HttpContext.User.Claims.ToList();
+                string userId = _context.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                var user = _userManager.GetUserAsync(_context.HttpContext.User);
+                int vacs = user.Result.VacationDays;
+
+                model.Name = currentLogin.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value;
+                model.Id = currentLogin.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value;
+                model.VacationDays = vacs;
+            }
+            else
+            {
+                var user = _userManager.FindByIdAsync(id);
+                model.Name = user.Result.Name;
+                model.Id = id;
+                model.VacationDays = user.Result.VacationDays;
+            }
+
             return model;
         }
         private int GetVacationsByMonth(string appUserId, int month)

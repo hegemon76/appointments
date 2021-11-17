@@ -260,14 +260,18 @@ function GetCalendarData(successCallback, fetchInfo) {
             $.notify("Error", "error");
         }
     });
-    SetUserVacationDaysData();
+    SetUserVacationDaysData($("#appWorkerId").val());
 }
 
 //#endregion
 
-function SetUserVacationDaysData() {
+function SetUserVacationDaysData(id) {
+    var url = '';
+    if (id.length > 10) {
+        url = '/' + id;
+    }
     $.ajax({
-        url: routeURL + '/api/Vacation/GetCurrentUser',
+        url: routeURL + '/api/Vacation/GetCurrentUser' + url,
         type: 'GET',
         dataType: 'JSON',
         success: function (response) {
@@ -285,8 +289,9 @@ function SetUserVacationDaysData() {
 }
 
 function OnWorkerChange() {
-    calendar.refetchEvents();
     selectedWorker = $('#appWorkerId').val();
+    SetUserVacationDaysData(selectedWorker);
+    calendar.refetchEvents();
     $('#workerId').val(selectedWorker);
 }
 

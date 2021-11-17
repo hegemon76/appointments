@@ -97,14 +97,14 @@ namespace appointments.Controllers.API
             return Ok(commonResponse);
         }
 
-         [HttpGet]
-        [Route("GetCurrentUser")]
-        public IActionResult GetCurrentUser()
+        [HttpGet]
+        [Route("GetCurrentUser/{id}")]
+        public IActionResult GetCurrentUser(string id = "")
         {
             CommonResponse<AppWorkerViewModel> commonResponse = new CommonResponse<AppWorkerViewModel>();
             try
             {
-                commonResponse.dataenum = _vacationService.GetCurrentUser();
+                commonResponse.dataenum = _vacationService.GetCurrentUser(id);
                 commonResponse.status = (int)EnumStatusMessage.success_code;
             }
             catch (Exception e)
@@ -161,7 +161,7 @@ namespace appointments.Controllers.API
             {
                 commonResponse.status = await _vacationService.RejectEvent(id);
                 commonResponse.message = _messageHelper.GetStatusMessage(commonResponse.status);
-               
+
             }
             catch (Exception e)
             {
