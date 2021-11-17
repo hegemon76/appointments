@@ -41,57 +41,78 @@ namespace appointments.Services
 
         private async Task<int> AddEvent(VacationViewModel model)
         {
-            if (isOverlapWithOtherEvent(model.AppWorkerId, model.StartDate, model.EndDate))
-                return (int)EnumStatusMessage.OverlapDates;
-
-            if (!isMinimumDateToday(model.StartDate))
-                return (int)EnumStatusMessage.MinimumDate;
-
-            var startDate = DateTime.Parse(model.StartDate);
-            var endDate = DateTime.Parse(model.EndDate);
-
-            VacationStatus vacationStatus = _db.VacationStatus
-                                            .FirstOrDefault(x => x.Id == (int)EnumVacationStatus.Pending);
-            //create
-            Vacation vacation = new Vacation()
+            try
             {
-                Title = model.Title,
-                Description = model.Description,
-                StartDate = startDate,
-                EndDate = endDate,
-                Duration = model.Duration,
-                IsApproved = false,
-                IsRejected = false,
-                AppWorkerId = model.AppWorkerId,
-                AdminId = model.AdminId,
-                VacationStatus = vacationStatus
-            };
+                if (isOverlapWithOtherEvent(model.AppWorkerId, model.StartDate, model.EndDate))
+                    return (int)EnumStatusMessage.OverlapDates;
 
-            _db.Vacations.Add(vacation);
-            await _db.SaveChangesAsync();
-            return (int)EnumStatusMessage.VacationAdded;
+                if (!isMinimumDateToday(model.StartDate))
+                    return (int)EnumStatusMessage.MinimumDate;
+
+                var startDate = DateTime.Parse(model.StartDate);
+                var endDate = DateTime.Parse(model.EndDate);
+
+                VacationStatus vacationStatus = _db.VacationStatus
+                                                .FirstOrDefault(x => x.Id == (int)EnumVacationStatus.Pending);
+
+                var duration = (endDate - startDate).Days;
+                //create
+                Vacation vacation = new Vacation()
+                {
+                    Title = model.Title,
+                    Description = model.Description,
+                    StartDate = startDate,
+                    EndDate = endDate,
+                    Duration = duration + 1,
+                    IsApproved = false,
+                    IsRejected = false,
+                    AppWorkerId = model.AppWorkerId,
+                    AdminId = model.AdminId,
+                    VacationStatus = vacationStatus
+                };
+
+                var user = GetCurrentUser();
+                _db.Users.FirstOrDefault(x => x.Id == user.Id).VacationDays -= vacation.Duration;
+
+                _db.Vacations.Add(vacation);
+                await _db.SaveChangesAsync();
+                return (int)EnumStatusMessage.VacationAdded;
+            }
+            catch (Exception)
+            {
+                return (int)EnumStatusMessage.failure_code;
+            }
         }
 
         private async Task<int> UpdateEvent(VacationViewModel model)
         {
-            var startDate = DateTime.Parse(model.StartDate);
-            var endDate = DateTime.Parse(model.EndDate);
-            //update
-            var vacation = _db.Vacations.FirstOrDefault(x => x.Id == model.Id);
-            if (!vacation.IsApproved && !vacation.IsRejected)
+            try
             {
-                vacation.Title = model.Title;
-                vacation.Description = model.Description;
-                vacation.StartDate = startDate;
-                vacation.EndDate = endDate;
-                vacation.Duration = model.Duration;
-                vacation.IsApproved = model.IsApproved;
-                vacation.AppWorkerId = model.AppWorkerId;
-                vacation.AdminId = model.AdminId;
-                await _db.SaveChangesAsync();
-                return (int)EnumStatusMessage.VacationUpdated;
+                var startDate = DateTime.Parse(model.StartDate);
+                var endDate = DateTime.Parse(model.EndDate);
+
+                var duration = (endDate - startDate).Days;
+                //update
+                var vacation = _db.Vacations.FirstOrDefault(x => x.Id == model.Id);
+                if (!vacation.IsApproved && !vacation.IsRejected)
+                {
+                    vacation.Title = model.Title;
+                    vacation.Description = model.Description;
+                    vacation.StartDate = startDate;
+                    vacation.EndDate = endDate;
+                    vacation.Duration = duration + 1;
+                    vacation.IsApproved = model.IsApproved;
+                    vacation.AppWorkerId = model.AppWorkerId;
+                    vacation.AdminId = model.AdminId;
+                    await _db.SaveChangesAsync();
+                    return (int)EnumStatusMessage.VacationUpdated;
+                }
+                return (int)EnumStatusMessage.OperationNotAllowed;
             }
-            return (int)EnumStatusMessage.OperationNotAllowed;
+            catch (Exception)
+            {
+                return (int)EnumStatusMessage.failure_code;
+            }
         }
 
         public List<AppWorkerViewModel> GetWorkerList()
@@ -134,7 +155,7 @@ namespace appointments.Services
             var daysTaken = _db.Vacations.Where(x => x.AppWorkerId == appUserId)
                 .Where(x => x.StartDate.Month == month || x.EndDate.Month == month)
                 .ToList();
-            
+
             int daysInMonth = DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month);
             TimeSpan diffResult;
             List<DateTime> daysList = new List<DateTime>();
@@ -197,6 +218,11 @@ namespace appointments.Services
             var vacation = _db.Vacations.FirstOrDefault(x => x.Id == id);
             if (vacation != null)
             {
+                var userId = GetCurrentUser();
+                var appUser = _db.Users.FirstOrDefault(x => x.Id == userId.Id);
+                appUser.VacationDaysTaken -= vacation.Duration;
+                appUser.VacationDays += vacation.Duration;
+
                 _db.Vacations.Remove(vacation);
                 await _db.SaveChangesAsync();
                 return (int)EnumStatusMessage.VacationDeleted;

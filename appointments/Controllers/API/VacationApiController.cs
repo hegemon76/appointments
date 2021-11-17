@@ -97,6 +97,24 @@ namespace appointments.Controllers.API
             return Ok(commonResponse);
         }
 
+         [HttpGet]
+        [Route("GetCurrentUser")]
+        public IActionResult GetCurrentUser()
+        {
+            CommonResponse<AppWorkerViewModel> commonResponse = new CommonResponse<AppWorkerViewModel>();
+            try
+            {
+                commonResponse.dataenum = _vacationService.GetCurrentUser();
+                commonResponse.status = (int)EnumStatusMessage.success_code;
+            }
+            catch (Exception e)
+            {
+                commonResponse.message = e.Message;
+                commonResponse.status = (int)EnumStatusMessage.failure_code;
+            }
+            return Ok(commonResponse);
+        }
+
         [HttpGet]
         [Route("DeleteVacation/{id}")]
         public async Task<IActionResult> DeleteVacation(int id)

@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 initialView: 'dayGridMonth',
                 firstDay: 1,
                 locale: 'pl',
-               
+
                 buttonText: {
                     month: 'Miesiąc',
                     today: 'Dzisiaj'
@@ -112,6 +112,7 @@ function onDataUpdate(value) {
 
 //#region event operations - API calls
 function onSubmitForm() {
+
     if (checkValidation()) {
         var requestData = {
             Id: parseInt($("#id").val()),
@@ -120,8 +121,8 @@ function onSubmitForm() {
             StartDate: $("#dateFrom").val(),
             EndDate: $("#dateEnd").val(),
             AppWorkerId: $("#appWorkerId").val(),
-            Duration: $("#duration").val(),
         }
+
         $.ajax({
             url: routeURL + '/api/Vacation/SaveCalendarData',
             type: 'POST',
@@ -259,11 +260,29 @@ function GetCalendarData(successCallback, fetchInfo) {
             $.notify("Error", "error");
         }
     });
+    SetUserVacationDaysData();
 }
 
 //#endregion
 
-
+function SetUserVacationDaysData() {
+    $.ajax({
+        url: routeURL + '/api/Vacation/GetCurrentUser',
+        type: 'GET',
+        dataType: 'JSON',
+        success: function (response) {
+            var user = [];
+            if (!isNaN(response.status) && response.status > 0) {
+                user = response.dataenum
+                $('#current-vacation-days').html(user.vacationDays);
+                return user;
+            }
+        },
+        error: function (xhr) {
+            $.notify("Error", "error");
+        }
+    });
+}
 
 function OnWorkerChange() {
     calendar.refetchEvents();

@@ -1,11 +1,7 @@
 ﻿using appointments.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
 using vacations.Models.Helper;
 using Microsoft.AspNetCore.Http;
-using System.Linq;
-using System.Security.Claims;
-using appointments.Models.ViewModels;
 
 namespace appointments.Controllers
 {
