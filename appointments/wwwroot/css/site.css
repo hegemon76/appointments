@@ -59,6 +59,9 @@ html {
     min-height: 100%;
 }
 
+.legend{
+    text-align:center;
+}
 
 body {
     /* Margin bottom by footer height */

@@ -71,12 +71,17 @@ namespace appointments.Services
                     VacationStatus = vacationStatus
                 };
 
-                var user = GetCurrentUser();
-               _db.Users.FirstOrDefault(x => x.Id == user.Id).VacationDays -= vacation.Duration;
-                _db.Users.Update(x =>   );
-                _db.Vacations.Add(vacation);
-                await _db.SaveChangesAsync();
-                return (int)EnumStatusMessage.VacationAdded;
+                var user = _db.Users.FirstOrDefault(x => x.Id == model.AppWorkerId);
+
+                if (user != null)
+                {
+                    user.VacationDays -= vacation.Duration;
+                    _db.Users.Update(user);
+                    _db.Vacations.Add(vacation);
+                    await _db.SaveChangesAsync();
+                    return (int)EnumStatusMessage.VacationAdded;
+                }
+                return (int)EnumStatusMessage.failure_code;
             }
             catch (Exception)
             {
@@ -124,14 +129,16 @@ namespace appointments.Services
                            select new AppWorkerViewModel
                            {
                                Id = user.Id,
-                               Name = user.Name
+                               Name = user.Name,
+                               VacationDays = user.VacationDays,
+                               VacationDaysTaken = user.VacationDaysTaken
                            }
                           ).ToList();
 
             return workers;
         }
 
-        public AppWorkerViewModel GetCurrentUser(string id="")
+        public AppWorkerViewModel GetCurrentUser(string id = "")
         {
             AppWorkerViewModel model = new AppWorkerViewModel();
             if (string.IsNullOrWhiteSpace(id))
@@ -219,16 +226,35 @@ namespace appointments.Services
                 }).SingleOrDefault();
         }
 
+        public List<VacationViewModel> GetAllVacations()
+        {
+            return _db.Vacations.Include(x => x.VacationStatus)
+                .Include(x => _db.Users.SingleOrDefault(c => c.Id == x.AppWorkerId))
+                .Select(c => new VacationViewModel()
+                {
+                    Id = c.Id,
+                    Description = c.Description,
+                    StartDate = c.StartDate.ToString("yyyy-MM,dd"),
+                    EndDate = c.EndDate.ToString("yyyy-MM,dd"),
+                    Title = c.AppWorkerId,
+                    Duration = c.Duration,
+                    IsApproved = c.IsApproved,
+                    IsRejected = c.IsRejected,
+                    AppWorkerId = c.AppWorkerId,
+                    StatusText = c.VacationStatus.StatusText
+                }).ToList();
+        }
+
         public async Task<int> DeleteEvent(int id)
         {
             var vacation = _db.Vacations.FirstOrDefault(x => x.Id == id);
             if (vacation != null)
             {
-                var userId = GetCurrentUser();
-                var appUser = _db.Users.FirstOrDefault(x => x.Id == userId.Id);
+                var appUser = _db.Users.FirstOrDefault(x => x.Id == vacation.AppWorkerId);
                 appUser.VacationDaysTaken -= vacation.Duration;
                 appUser.VacationDays += vacation.Duration;
 
+                _db.Update(appUser);
                 _db.Vacations.Remove(vacation);
                 await _db.SaveChangesAsync();
                 return (int)EnumStatusMessage.VacationDeleted;
@@ -258,9 +284,14 @@ namespace appointments.Services
             {
                 if (!vacation.IsApproved)
                 {
+                    var user = _db.Users.FirstOrDefault(x => x.Id == vacation.AppWorkerId);
                     var vacationStatus = _db.VacationStatus.FirstOrDefault(x => x.Id == (int)EnumVacationStatus.Rejected);
                     vacation.IsRejected = true;
                     vacation.VacationStatus = vacationStatus;
+                    user.VacationDays += vacation.Duration;
+                    user.VacationDaysTaken -= vacation.Duration;
+
+                    _db.Update(user);
                     await _db.SaveChangesAsync();
                     return (int)EnumStatusMessage.VacationRejected;
                 }

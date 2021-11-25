@@ -78,6 +78,24 @@ namespace appointments.Controllers.API
             return Ok(commonResponse);
         }
 
+        [HttpGet]
+        [Route("GetAllWorkersData")]
+        public IActionResult GetAllWorkersData()
+        {
+            CommonResponse<List<VacationViewModel>> commonResponse = new CommonResponse<List<VacationViewModel>>();
+            try
+            {
+                    commonResponse.dataenum = _vacationService.GetAllVacations();
+                    commonResponse.status = (int)EnumStatusMessage.success_code;
+            }
+            catch (Exception e)
+            {
+                commonResponse.message = e.Message;
+                commonResponse.status = (int)EnumStatusMessage.failure_code;
+            }
+            return Ok(commonResponse);
+        }
+
 
         [HttpGet]
         [Route("GetCalendarDataById/{id}")]

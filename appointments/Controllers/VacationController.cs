@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using vacations.Models.Helper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 
 namespace appointments.Controllers
 {
@@ -15,7 +16,7 @@ namespace appointments.Controllers
             _context = context;
         }
 
-        //[Authorize(Roles = "Admin, AppWorker")]
+        [Authorize(Roles = "Admin, AppWorker")]
         public IActionResult Index()
         {
             if (User.IsInRole(RoleNames.Role_Admin))
@@ -25,9 +26,15 @@ namespace appointments.Controllers
             else
             {
                 var currentUser = _vacationService.GetCurrentUser();
-                
+
                 ViewBag.CurrentUser = currentUser;
             }
+            return View();
+        }
+
+        public IActionResult AllWorkerVacation()
+        {
+            ViewBag.WorkerList = _vacationService.GetWorkerList();
             return View();
         }
     }

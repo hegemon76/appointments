@@ -1,8 +1,7 @@
-﻿@using appointments.Helper;
-@using vacations.Models.Helper
+﻿@using vacations.Models.Helper
 
 <div class="row">
-    <div class="container">
+    <div class="container" style="display:none">
         @if (User.IsInRole(RoleNames.Role_Admin))
         {
             <div class="form-group row col-6" id="divAppWorkerList">
@@ -28,18 +27,6 @@
 <div class="d-flex align-content-center">
     <div class="row w-100">
         <div class="col-12 col-xl-2">
-            <table class="table table-hover">
-                <tbody>
-                    <tr>
-                        <th scope="col">Liczba dni urlopowych</th>
-                        <th id="current-vacation-days" class="align-middle text" scope="col">0</th>
-                    </tr>
-                    <tr>
-                        <th scope="col">Wykorzystano w tym miesiącu</th>
-                        <th class="align-middle" scope="col">0</th>
-                    </tr>
-                </tbody>
-            </table>
             <div class="align-content-end">
                 <h5 class="legend">Legenda</h5>
                 <table>
@@ -61,5 +48,6 @@
     </div>
 </div>
 
-<script src="~/js/script-custom-calendar.js"></script>
+<script src="~/js/script-custom-calendar-daysView.js"></script>
+<script></script>
 <partial name="_AddEditApointment" />

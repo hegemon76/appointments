@@ -15,5 +15,6 @@ namespace appointments.Services
         public Task<int> ConfirmEvent(int id);
         public Task<int> RejectEvent(int id);
         public AppWorkerViewModel GetCurrentUser(string workerId="");
+        public List<VacationViewModel> GetAllVacations();
     }
 }
