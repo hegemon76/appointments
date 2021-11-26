@@ -31,7 +31,7 @@ namespace appointments.Controllers
             }
             return View();
         }
-
+         
         public IActionResult AllWorkerVacation()
         {
             ViewBag.WorkerList = _vacationService.GetWorkerList();

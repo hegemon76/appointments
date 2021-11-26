@@ -210,7 +210,7 @@ namespace appointments.Services
 
         public VacationViewModel GetById(int id)
         {
-            return _db.Vacations.Include(x => x.VacationStatus)
+            var vacation = _db.Vacations.Include(x => x.VacationStatus)
                 .Where(x => x.Id == id).ToList().Select(c => new VacationViewModel()
                 {
                     Id = c.Id,
@@ -224,25 +224,27 @@ namespace appointments.Services
                     AppWorkerId = c.AppWorkerId,
                     StatusText = c.VacationStatus.StatusText
                 }).SingleOrDefault();
+
+            return vacation;
         }
 
         public List<VacationViewModel> GetAllVacations()
         {
-            return _db.Vacations.Include(x => x.VacationStatus)
-                .Include(x => _db.Users.SingleOrDefault(c => c.Id == x.AppWorkerId))
+            var vacation = _db.Vacations.Include(x => x.VacationStatus)
                 .Select(c => new VacationViewModel()
                 {
                     Id = c.Id,
                     Description = c.Description,
                     StartDate = c.StartDate.ToString("yyyy-MM,dd"),
                     EndDate = c.EndDate.ToString("yyyy-MM,dd"),
-                    Title = c.AppWorkerId,
+                    Title = _db.Users.Where(x => x.Id == c.AppWorkerId).FirstOrDefault().Email,
                     Duration = c.Duration,
                     IsApproved = c.IsApproved,
                     IsRejected = c.IsRejected,
-                    AppWorkerId = c.AppWorkerId,
                     StatusText = c.VacationStatus.StatusText
                 }).ToList();
+
+            return vacation;
         }
 
         public async Task<int> DeleteEvent(int id)
@@ -306,7 +308,7 @@ namespace appointments.Services
             DateTime _endDate = Convert.ToDateTime(endDate);
 
             Vacation isEventOverlap = _db.Vacations.Where(x => x.AppWorkerId == workerId)
-                .Where(x => x.StartDate >= _startDate && x.EndDate <= _endDate).FirstOrDefault();
+                .Where(x => (x.StartDate >= _startDate && x.EndDate <= _startDate) || (x.StartDate >= _endDate && x.EndDate <= _endDate)).FirstOrDefault();
 
             if (isEventOverlap == null)
                 return false;

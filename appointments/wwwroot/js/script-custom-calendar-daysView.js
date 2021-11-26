@@ -48,7 +48,7 @@ function onShowModal(obj, isEventDetails) {
         $("#id").val(obj.id);
         $('#title').val(obj.title);
         $('#duration').val(obj.duration);
-        $("#appWorkerId").val(obj.appWorkerId);
+        $("#workerId").val(obj.appWorkerId);
         $('#btnSend').html('Wyślij');
 
         $("#description").val(obj.description);
@@ -120,7 +120,7 @@ function onSubmitForm() {
             Description: $("#description").val(),
             StartDate: $("#dateFrom").val(),
             EndDate: $("#dateEnd").val(),
-            AppWorkerId: $("#appWorkerId").val(),
+            AppWorkerId: $("#workerId").val(),
         }
 
         $.ajax({
