@@ -1,0 +1,53 @@
+﻿@using vacations.Models.Helper
+
+<div class="row">
+    <div class="container" style="display:none">
+        @if (User.IsInRole(RoleNames.Role_Admin))
+        {
+            <div class="form-group row col-6" id="divAppWorkerList">
+                <label>Wybierz pracownika</label>
+                @Html.DropDownList("appWorkerId", new SelectList(ViewBag.WorkerList, "Id", "Name"),
+               new
+                    {
+                        @class = "form-control select2",
+                   @onchange = "OnWorkerChange();"
+               })
+            </div>
+        }
+        else
+        {
+            <div class="form-group row col-6" id="divAppWorkerList">
+                <label>Pracownik</label>
+                <label>@ViewBag.CurrentUser.Name</label>
+                <input type="text" hidden id="appWorkerId" value="@ViewBag.CurrentUser.Id" />
+            </div>
+        }
+    </div>
+</div>
+<div class="d-flex align-content-center">
+    <div class="row w-100">
+        <div class="col-12 col-xl-2">
+            <div class="align-content-end">
+                <h5 class="legend">Legenda</h5>
+                <table>
+                    <tbody class="table table-hover">
+                        <tr>
+                            <th class="col legend rounded" style="background-color: rgb(220, 53, 69)">W trakcie akceptacji</th>
+                        </tr>
+                        <tr>
+                            <th class="col legend rounded" style="background-color: rgb(40, 167, 69)">Zaakceptowana</th>
+                        </tr>
+                        <tr>
+                            <th class="col legend rounded" style="background-color: rgb(202, 202, 202)">Odrzucona</th>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-xl-10" id="calendar"></div>
+    </div>
+</div>
+
+<script src="~/js/script-custom-calendar-daysView.js"></script>
+<script></script>
+<partial name="_AddEditApointment" />

@@ -21,7 +21,15 @@
             <a class="nav-link text-white" id="registerLink" asp-controller="Home" asp-action="Index">Strona domowa</a>
             @if (signInManager.IsSignedIn(User))
             {
-                <a class="nav-link text-white" id="registerLink" asp-controller="Vacation" asp-action="Index">Urlopy</a>
+                @if (User.IsInRole(RoleNames.Role_Admin))
+                {
+                    <a class="nav-link text-white" id="registerLink" asp-controller="Vacation" asp-action="Index">Urlopy pracowników</a>
+                    <a class="nav-link text-white" id="registerLink" asp-controller="Vacation" asp-action="AllWorkerVacation">Urlopy wszystkich</a>
+                }
+                else
+                {
+                    <a class="nav-link text-white" id="registerLink" asp-controller="Vacation" asp-action="Index">Urlopy</a>
+                }
             }
             @if (User.IsInRole(RoleNames.Role_Admin))
             {
@@ -57,7 +65,7 @@
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/qtip2/3.0.3/jquery.qtip.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/fullcalendar@5.9.0/main.min.js"></script>
     <script type="text/javascript" src="~/js/notify.min.js"></script>
-    <script src="~/js/script-custom-calendar.js"></script>
+    @*<script src="~/js/script-custom-calendar.js"></script>*@
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

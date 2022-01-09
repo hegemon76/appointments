@@ -33,7 +33,7 @@ namespace appointments.Data
         public List<VacationStatus> SeedVacationStatusData()
         {
             var vacationStatus = new List<VacationStatus>();
-            using (StreamReader r = new StreamReader(@"C:\Users\Adin\source\repos\appointments\appointments\Data\seeders\vacationStatus.JSON"))
+            using (StreamReader r = new StreamReader(@"C:\Users\Adrian\source\repos\hegemon76\appointments\appointments\Data\seeders\vacationStatus.JSON"))
             {
                 string json = r.ReadToEnd();
                 vacationStatus = JsonConvert.DeserializeObject<List<VacationStatus>>(json);
