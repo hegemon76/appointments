@@ -8,6 +8,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using vacations.Models.Enums;
 using vacations.Models.Helper;
+using vacations.Models.ViewModels;
 
 namespace appointments.Controllers.API
 {
@@ -144,6 +145,24 @@ namespace appointments.Controllers.API
                 commonResponse.status = await _vacationService.RejectEvent(id);
                 commonResponse.message = _messageHelper.GetStatusMessage(commonResponse.status);
                
+            }
+            catch (Exception e)
+            {
+                commonResponse.message = e.Message;
+                commonResponse.status = (int)EnumStatusMessage.failure_code;
+            }
+            return Ok(commonResponse);
+        }
+
+        [HttpGet]
+        [Route("GetVacationsDaysInfo")]
+        public async Task<IActionResult> GetVacationsDaysInfo(string userId, int month)
+        {
+            CommonResponse<VacationsDaysInfoVm> commonResponse = new CommonResponse<VacationsDaysInfoVm>();
+            try
+            {
+                commonResponse.dataenum = _vacationService.GetVacationsDaysInfo(userId, month);
+                commonResponse.status = (int)EnumStatusMessage.success_code;
             }
             catch (Exception e)
             {

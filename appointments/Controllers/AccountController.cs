@@ -1,8 +1,10 @@
 ﻿using appointments.Models;
 using appointments.Models.ViewModels;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using vacations.Models.Helper;
 
 namespace appointments.Controllers
 {
@@ -10,12 +12,14 @@ namespace appointments.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         public AccountController(UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager)
+            SignInManager<ApplicationUser> signInManager, IHttpContextAccessor httpContextAccessor)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _httpContextAccessor = httpContextAccessor;
         }
         public IActionResult Login()
         {
@@ -47,6 +51,9 @@ namespace appointments.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
+            if (!User.IsInRole(RoleNames.Role_Admin))
+                ModelState.Remove("RoleName");
+
             if (ModelState.IsValid)
             {
                 var user = new ApplicationUser
@@ -62,9 +69,18 @@ namespace appointments.Controllers
 
                 if (result.Succeeded)
                 {
+                    if (model.RoleName == null)
+                        model.RoleName = RoleNames.Role_AppWorker;
+
                     await _userManager.AddToRoleAsync(user, model.RoleName);
-                    await _signInManager.SignInAsync(user, false);
-                    return RedirectToAction("Index", "Home");
+                    // await _signInManager.SignInAsync(user, false);
+                    bool isLoggedin = (_httpContextAccessor.HttpContext.User != null) &&
+                        (_httpContextAccessor.HttpContext.User.Identity.IsAuthenticated);
+
+                    if (isLoggedin)
+                        return RedirectToAction("Index", "Home");
+
+                    return RedirectToAction("Login", "Account");
                 }
                 foreach (var error in result.Errors)
                 {

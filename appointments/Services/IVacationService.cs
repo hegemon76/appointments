@@ -1,7 +1,9 @@
 ﻿using appointments.Models;
 using appointments.Models.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using vacations.Models.ViewModels;
 
 namespace appointments.Services
 {
@@ -15,5 +17,7 @@ namespace appointments.Services
         public Task<int> ConfirmEvent(int id);
         public Task<int> RejectEvent(int id);
         public AppWorkerViewModel GetCurrentUser();
+        public VacationViewModel GetVacationsDaysByMonth(string appUserId, int month);
+        public VacationsDaysInfoVm GetVacationsDaysInfo(string appUserId, int month);
     }
 }

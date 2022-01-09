@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using vacations.Models.Enums;
 using vacations.Models.Helper;
 using Microsoft.AspNetCore.Identity;
+using vacations.Models.ViewModels;
 
 namespace appointments.Services
 {
@@ -50,6 +51,8 @@ namespace appointments.Services
             var startDate = DateTime.Parse(model.StartDate);
             var endDate = DateTime.Parse(model.EndDate);
 
+            int duration = evaluateDuration(startDate, endDate);
+
             VacationStatus vacationStatus = _db.VacationStatus
                                             .FirstOrDefault(x => x.Id == (int)EnumVacationStatus.Pending);
             //create
@@ -59,7 +62,7 @@ namespace appointments.Services
                 Description = model.Description,
                 StartDate = startDate,
                 EndDate = endDate,
-                Duration = model.Duration,
+                Duration = duration,
                 IsApproved = false,
                 IsRejected = false,
                 AppWorkerId = model.AppWorkerId,
@@ -67,6 +70,12 @@ namespace appointments.Services
                 VacationStatus = vacationStatus
             };
 
+            var user = _db.Users.FirstOrDefault(x => x.Id == model.AppWorkerId);
+            if (model.AppWorkerId == null)
+                user = await _userManager.GetUserAsync(_context.HttpContext.User);
+
+            user.VacationDays -= duration;
+            _db.Users.FirstOrDefault(x => x.Id == user.Id).VacationDays = user.VacationDays;
             _db.Vacations.Add(vacation);
             await _db.SaveChangesAsync();
             return (int)EnumStatusMessage.VacationAdded;
@@ -76,6 +85,8 @@ namespace appointments.Services
         {
             var startDate = DateTime.Parse(model.StartDate);
             var endDate = DateTime.Parse(model.EndDate);
+
+            var duration = evaluateDuration(startDate, endDate);
             //update
             var vacation = _db.Vacations.FirstOrDefault(x => x.Id == model.Id);
             if (!vacation.IsApproved && !vacation.IsRejected)
@@ -84,7 +95,7 @@ namespace appointments.Services
                 vacation.Description = model.Description;
                 vacation.StartDate = startDate;
                 vacation.EndDate = endDate;
-                vacation.Duration = model.Duration;
+                vacation.Duration = duration;
                 vacation.IsApproved = model.IsApproved;
                 vacation.AppWorkerId = model.AppWorkerId;
                 vacation.AdminId = model.AdminId;
@@ -129,12 +140,12 @@ namespace appointments.Services
             };
             return model;
         }
-        private int GetVacationsByMonth(string appUserId, int month)
+        public VacationViewModel GetVacationsDaysByMonth(string appUserId, int month)
         {
             var daysTaken = _db.Vacations.Where(x => x.AppWorkerId == appUserId)
                 .Where(x => x.StartDate.Month == month || x.EndDate.Month == month)
                 .ToList();
-            
+
             int daysInMonth = DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month);
             TimeSpan diffResult;
             List<DateTime> daysList = new List<DateTime>();
@@ -147,7 +158,7 @@ namespace appointments.Services
                         daysList.Add(day.StartDate.AddDays(i));
                 }
             }
-            return daysList.Count();
+            return new VacationViewModel { DaysTakenInMonth = daysInMonth };
         }
 
         public List<VacationViewModel> VacationsEventById(string workerId, int month)
@@ -155,23 +166,21 @@ namespace appointments.Services
             if (workerId == null)
                 workerId = _context.HttpContext.User.Claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value;
 
-            GetVacationsByMonth(workerId, month);
-
             return _db.Vacations.Include(x => x.VacationStatus)
                 .Where(x => x.AppWorkerId == workerId)
-                .Where(x => x.StartDate.Month == month)
-                .ToList().Select(c => new VacationViewModel()
-                {
-                    Id = c.Id,
-                    Description = c.Description,
-                    StartDate = c.StartDate.ToString("yyyy-MM,dd"),
-                    EndDate = c.EndDate.ToString("yyyy-MM,dd"),
-                    Title = c.Title,
-                    Duration = c.Duration,
-                    IsApproved = c.IsApproved,
-                    IsRejected = c.IsRejected,
-                    StatusText = c.VacationStatus.StatusText
-                }).ToList();
+                .Where(x => (x.StartDate.Month == month) || (x.EndDate.Month == month))
+                 .Select(c => new VacationViewModel()
+                 {
+                     Id = c.Id,
+                     Description = c.Description,
+                     StartDate = c.StartDate.ToString("yyyy-MM-dd"),
+                     EndDate = c.EndDate.ToString("yyyy-MM-dd"),
+                     Title = c.Title,
+                     Duration = c.Duration,
+                     IsApproved = c.IsApproved,
+                     IsRejected = c.IsRejected,
+                     StatusText = c.VacationStatus.StatusText,
+                 }).ToList();
         }
 
         public VacationViewModel GetById(int id)
@@ -192,12 +201,17 @@ namespace appointments.Services
                 }).SingleOrDefault();
         }
 
-        public async Task<int> DeleteEvent(int id)
+        public async Task<int> DeleteEvent(int eventId)
         {
-            var vacation = _db.Vacations.FirstOrDefault(x => x.Id == id);
+            var vacation = _db.Vacations.FirstOrDefault(x => x.Id == eventId);
             if (vacation != null)
             {
+                var user = _db.Users.FirstOrDefault(x => x.Id == vacation.AppWorkerId);
+                user.VacationDays += vacation.Duration;
+
                 _db.Vacations.Remove(vacation);
+                _db.Update(user);
+
                 await _db.SaveChangesAsync();
                 return (int)EnumStatusMessage.VacationDeleted;
             }
@@ -224,17 +238,43 @@ namespace appointments.Services
             var vacation = _db.Vacations.FirstOrDefault(x => x.Id == id);
             if (vacation != null)
             {
+                var user = _db.Users.FirstOrDefault(x => x.Id == vacation.AppWorkerId);
                 if (!vacation.IsApproved)
                 {
                     var vacationStatus = _db.VacationStatus.FirstOrDefault(x => x.Id == (int)EnumVacationStatus.Rejected);
                     vacation.IsRejected = true;
                     vacation.VacationStatus = vacationStatus;
+                    user.VacationDays += vacation.Duration;
+                    _db.Update(user);
                     await _db.SaveChangesAsync();
                     return (int)EnumStatusMessage.VacationRejected;
                 }
                 return (int)EnumStatusMessage.OperationNotAllowed;
             }
             return (int)EnumStatusMessage.failure_code;
+        }
+
+        public VacationsDaysInfoVm GetVacationsDaysInfo(string userId, int month)
+        {
+            var user = _db.Users
+                .FirstOrDefault(x => x.Id == userId);
+
+            var vacations = _db.Vacations
+                .Where(x => x.AppWorkerId == user.Id)
+                .Where(z => z.IsRejected != true)
+                .Where(c => (c.StartDate.Month == month) || (c.EndDate.Month == month));
+
+            int takenInMonth = 0;
+            foreach (var item in vacations)
+            {
+                takenInMonth += evaluateDuration(item.StartDate, item.EndDate, month);
+            }
+
+            return new VacationsDaysInfoVm()
+            {
+                VacationsDaysLeft = user.VacationDays,
+                VacationsDaysTaken = takenInMonth
+            };
         }
 
         private bool isOverlapWithOtherEvent(string workerId, string startDate, string endDate)
@@ -259,6 +299,26 @@ namespace appointments.Services
                 return false;
 
             return true;
+        }
+
+        private int evaluateDuration(DateTime startDate, DateTime endDate, int month = 0)
+        {
+            var daysList = Enumerable.Range(0, 1 + endDate.Date
+                .Subtract(startDate).Days)
+                .Select(offset => startDate.Date.AddDays(offset))
+                .ToList();
+
+            int duration = 0;
+            if (month != 0)
+                daysList = daysList.Where(x => x.Month == month).ToList();
+
+            foreach (var item in daysList)
+            {
+                if (item.DayOfWeek != DayOfWeek.Saturday && item.DayOfWeek != DayOfWeek.Sunday)
+                    duration += 1;
+            }
+
+            return duration;
         }
     }
 

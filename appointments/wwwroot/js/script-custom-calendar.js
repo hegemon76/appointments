@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 initialView: 'dayGridMonth',
                 firstDay: 1,
                 locale: 'pl',
-               
+
                 buttonText: {
                     month: 'Miesiąc',
                     today: 'Dzisiaj'
@@ -77,14 +77,11 @@ function onShowModal(obj, isEventDetails) {
         var y = new moment(obj.endStr);
         var startDate = moment(obj.startStr).format("YYYY-MM-DD");
         var endDate = moment(obj.endStr).subtract(1, 'day').format("YYYY-MM-DD");
-        var duration = y.diff(x, 'days');
-        if (duration == 0)
-            duration = 1;
+        $('#duration').val(evaluateVacationDuration(startDate, endDate));
 
         $('#dateFrom').val(startDate);
         $('#dateEnd').val(endDate);
 
-        $('#duration').val(duration);
         newEventFooter();
     }
     $("#appointmentInput").modal("show");
@@ -104,8 +101,7 @@ function onCloseModal() {
 function onDataUpdate(value) {
     var x = new moment(document.getElementById('dateFrom').value);
     var y = new moment(document.getElementById('dateEnd').value);
-    var duration = y.diff(x, 'days');
-    $('#duration').val(duration + 1);
+    $('#duration').val(evaluateVacationDuration(x,y));
 }
 
 //#endregion
@@ -129,6 +125,9 @@ function onSubmitForm() {
             contentType: 'application/json',
             success: function (response) {
                 if (!isNaN(response.status) && response.status > 0) {
+
+                    evaluateVacationsDaysLeft(requestData.Duration, response.status)
+
                     calendar.refetchEvents();
                     $.notify(response.message, "success");
                     onCloseModal();
@@ -141,6 +140,21 @@ function onSubmitForm() {
                 $.notify("Error", "error");
             }
         });
+    }
+}
+
+function evaluateVacationsDaysLeft(duration, responseStatusCode) {
+    var daysTaken = parseInt(document.getElementById("vacationsDaysLeft").innerText);
+
+    switch (responseStatusCode) {
+        case 2:
+            daysTaken -= parseInt(duration);
+            $("#vacationsDaysLeft").html(daysTaken);
+            break;
+        case 4:
+            daysTaken += parseInt(duration);
+            $("#vacationsDaysLeft").html(daysTaken);
+            break;
     }
 }
 
@@ -230,28 +244,36 @@ function getEventDetailsByEventId(info) {
 
 function GetCalendarData(successCallback, fetchInfo) {
     var monthDt = new moment(fetchInfo.startStr).format("M");
+    var selectedUser = $("#appWorkerId").val();
+    var daysTakenInMonth = 0;
+
     $.ajax({
-        url: routeURL + '/api/Vacation/GetCalendarData?workerId=' + $("#appWorkerId").val() + "&month=" + monthDt,
+        url: routeURL + '/api/Vacation/GetCalendarData?workerId=' + selectedUser + "&month=" + monthDt,
         type: 'GET',
         dataType: 'JSON',
         success: function (response) {
             var events = [];
-            if (!isNaN(response.status) && response.status > 0) {
-                $.each(response.dataenum, function (i, data) {
-                    //workaround becouse end date was exclusively so we have to add 1 day
-                    var endDate = moment(data.endDate).add(1, 'day').format("YYYY-MM-DD");
-                    events.push({
-                        allDay: true,
-                        title: data.title,
-                        description: data.description,
-                        start: new Date(data.startDate),
-                        end: endDate,
-                        backgroundColor: getEventBgColor(data),
-                        borderColor: "#162466",
-                        textColor: "white",
-                        id: data.id
-                    });
-                })
+            if (response.status > 0) {
+                if (response.dataenum.length === 0)
+                    $("#vacation-days-taken").html(0);
+                else {
+                    getWorkerVacationDaysInfo(selectedUser, parseInt(monthDt));
+                    $.each(response.dataenum, function (i, data) {
+                        //workaround becouse end date was exclusively so we have to add 1 day
+                        var endDate = moment(data.endDate).add(1, 'day').format("YYYY-MM-DD");
+                        events.push({
+                            allDay: true,
+                            title: data.title,
+                            description: data.description,
+                            start: new Date(data.startDate),
+                            end: endDate,
+                            backgroundColor: getEventBgColor(data),
+                            borderColor: "#162466",
+                            textColor: "white",
+                            id: data.id
+                        });
+                    })
+                }
             }
             successCallback(events);
         },
@@ -261,14 +283,45 @@ function GetCalendarData(successCallback, fetchInfo) {
     });
 }
 
+function evaluateVacationDuration(startDate, endDate) {
+    var now = moment(startDate);
+    //var now = startDate.clone();
+    dates = [];
+    var duration = 0;
+    while (now.isSameOrBefore(endDate)) {
+        dates.push(now.format('MM/DD/YYYY'));
+        var dayInt = now.isoWeekday();
+        if (dayInt < 6)
+            duration += 1;
+        now.add(1, 'days');
+    }
+    return duration;
+}
+
 //#endregion
-
-
 
 function OnWorkerChange() {
     calendar.refetchEvents();
     selectedWorker = $('#appWorkerId').val();
     $('#workerId').val(selectedWorker);
+    getWorkerVacationDaysInfo(selectedWorker);
+}
+
+function getWorkerVacationDaysInfo(workerId, month) {
+    $.ajax({
+        url: routeURL + '/api/Vacation/GetVacationsDaysInfo?userId=' + workerId + '&month=' + month,
+        type: 'GET',
+        dataType: 'JSON',
+        success: function (response) {
+            if (response.status > 0) {
+                $("#vacationsDaysLeft").html(response.dataenum.vacationsDaysLeft);
+                $("#vacation-days-taken").html(response.dataenum.vacationsDaysTaken)
+            }
+        },
+        error: function (xhr) {
+            $.notify("Error", "error");
+        }
+    });
 }
 
 /// === Helpers === ///
