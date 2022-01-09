@@ -183,6 +183,25 @@ namespace appointments.Services
                  }).ToList();
         }
 
+        public List<VacationViewModel> GetAllVacations()
+        {
+            return _db.Vacations.Include(x => x.VacationStatus)
+                .Include(x => _db.Users.SingleOrDefault(c => c.Id == x.AppWorkerId))
+                .Select(c => new VacationViewModel()
+                {
+                    Id = c.Id,
+                    Description = c.Description,
+                    StartDate = c.StartDate.ToString("yyyy-MM,dd"),
+                    EndDate = c.EndDate.ToString("yyyy-MM,dd"),
+                    Title = c.AppWorkerId,
+                    Duration = c.Duration,
+                    IsApproved = c.IsApproved,
+                    IsRejected = c.IsRejected,
+                    AppWorkerId = c.AppWorkerId,
+                    StatusText = c.VacationStatus.StatusText
+                }).ToList();
+        }
+
         public VacationViewModel GetById(int id)
         {
             return _db.Vacations.Include(x => x.VacationStatus)

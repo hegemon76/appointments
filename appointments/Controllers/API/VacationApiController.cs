@@ -123,7 +123,7 @@ namespace appointments.Controllers.API
             CommonResponse<AppWorkerViewModel> commonResponse = new CommonResponse<AppWorkerViewModel>();
             try
             {
-                commonResponse.dataenum = _vacationService.GetCurrentUser(id);
+                commonResponse.dataenum = _vacationService.GetCurrentUser();
                 commonResponse.status = (int)EnumStatusMessage.success_code;
             }
             catch (Exception e)

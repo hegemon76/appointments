@@ -19,5 +19,6 @@ namespace appointments.Services
         public AppWorkerViewModel GetCurrentUser();
         public VacationViewModel GetVacationsDaysByMonth(string appUserId, int month);
         public VacationsDaysInfoVm GetVacationsDaysInfo(string appUserId, int month);
+        public List<VacationViewModel> GetAllVacations();
     }
 }
